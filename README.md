@@ -15,6 +15,22 @@ It has three roles. **Patients** book and track visits, **doctors** paint their 
   <img src="docs/demo/booking-flow.gif" alt="Booking from the body map to the boarding pass" width="880">
 </p>
 
+## 🔑 Demo logins
+
+Run `python seed_demo.py` once (see [Getting started](#getting-started)) and log in with any of these:
+
+| Role | Username | Password | Good for trying |
+|---|---|---|---|
+| Admin | `admin` | `admin123` | Dashboard, managing doctors and patients, Ctrl+K "patient meera" |
+| Doctor | `dr.mehta` | `demo123` | Today's queue, **Call next patient**, prescriptions, My Week |
+| Patient | `rahul` | `demo123` | Live tickets, body map booking, health journey |
+
+More demo accounts, all with password `demo123`:
+- **Doctors:** `dr.sharma`, `dr.iyer`, `dr.khan`, `dr.gill`, `dr.nair`
+- **Patients:** `sneha`, `amit`, `priya`, `kiran`, `meera`, `vikram`, `ananya`
+
+The admin account is created automatically on first run. You can change its password with `ADMIN_PASSWORD` in `.env`.
+
 ## Highlights
 
 | | |
@@ -129,11 +145,7 @@ python app.py                     # http://localhost:5000  (lobby screen at /lob
 
 The database and the default admin account are created on first run. Older databases get the new columns added automatically.
 
-| Account | Username | Password |
-|---|---|---|
-| Admin | `admin` | `admin123` |
-| Doctors (demo data) | `dr.mehta`, `dr.sharma`, `dr.iyer`, `dr.khan`, `dr.gill`, `dr.nair` | `demo123` |
-| Patients (demo data) | `rahul`, `sneha`, `amit`, `priya`, `kiran`, `meera`, `vikram`, `ananya` | `demo123` |
+Log in with the accounts listed under [Demo logins](#-demo-logins).
 
 **Try this:**
 1. Open `/lobby` in one window.
