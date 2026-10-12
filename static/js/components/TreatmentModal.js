@@ -9,11 +9,12 @@ window.TreatmentModal = {
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+                        <div class="alert alert-danger py-2" v-if="error">{{ error }}</div>
                         <div class="mb-2"><strong>Patient:</strong> {{ patientName }}</div>
                         <div class="mb-3"><strong>Date:</strong> {{ apptDate }} at {{ apptTime }}</div>
                         <div class="mb-3">
                             <label class="form-label">Diagnosis *</label>
-                            <textarea class="form-control" v-model="form.diagnosis" rows="2" :readonly="viewOnly"></textarea>
+                            <textarea class="form-control" v-model="form.diagnosis" rows="2" :readonly="viewOnly" maxlength="2000"></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Prescription</label>
@@ -25,12 +26,15 @@ window.TreatmentModal = {
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Next Visit Date</label>
-                            <input type="date" class="form-control" v-model="form.next_visit" :readonly="viewOnly">
+                            <input type="date" class="form-control" v-model="form.next_visit" :readonly="viewOnly" :min="apptDate">
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-success" @click="save" v-if="!viewOnly">Save & Complete</button>
+                        <button type="button" class="btn btn-success" @click="save" v-if="!viewOnly" :disabled="saving">
+                            <span v-if="saving" class="spinner-border spinner-border-sm me-1"></span>
+                            Save & Complete
+                        </button>
                     </div>
                 </div>
             </div>
@@ -44,6 +48,8 @@ window.TreatmentModal = {
             apptDate: '',
             apptTime: '',
             viewOnly: false,
+            error: '',
+            saving: false,
             bsModal: null
         };
     },
@@ -57,8 +63,9 @@ window.TreatmentModal = {
             this.apptDate = appointment.date;
             this.apptTime = appointment.time;
             this.viewOnly = viewMode;
+            this.error = '';
 
-            if (viewMode && appointment.treatment) {
+            if (appointment.treatment) {
                 const t = appointment.treatment;
                 this.form = {
                     diagnosis: t.diagnosis || '',
@@ -73,6 +80,12 @@ window.TreatmentModal = {
         },
         async save() {
             const s = window.store;
+            this.error = '';
+            if (!this.form.diagnosis.trim()) {
+                this.error = 'Please enter a diagnosis';
+                return;
+            }
+            this.saving = true;
             try {
                 await s.api('/appointments/' + this.appointmentId + '/treatment', 'POST', {
                     diagnosis: this.form.diagnosis,
@@ -84,7 +97,9 @@ window.TreatmentModal = {
                 this.bsModal.hide();
                 this.$emit('saved');
             } catch (e) {
-                s.showAlert(e.message, 'danger');
+                this.error = e.message;
+            } finally {
+                this.saving = false;
             }
         }
     }

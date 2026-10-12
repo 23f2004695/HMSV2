@@ -32,7 +32,7 @@ window.RegisterForm = {
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Date of Birth</label>
-                        <input type="date" class="form-control" v-model="form.date_of_birth">
+                        <input type="date" class="form-control" v-model="form.date_of_birth" :max="todayStr">
                     </div>
                 </div>
                 <div class="row">
@@ -75,7 +75,8 @@ window.RegisterForm = {
             },
             error: '',
             loading: false,
-            bloodGroups: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+            bloodGroups: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+            todayStr: window.store.todayStr
         };
     },
     methods: {
@@ -83,19 +84,19 @@ window.RegisterForm = {
             this.error = '';
             this.loading = true;
             try {
-                const data = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.form)
-                }).then(r => r.json());
-
-                if (data.error) {
-                    this.error = data.error;
+                const f = this.form;
+                if (!f.name.trim() || !f.username.trim() || !f.email.trim() || !f.password) {
+                    this.error = 'Please fill in all the required fields';
                     return;
                 }
+                if (f.password.length < 6) {
+                    this.error = 'Password must be at least 6 characters';
+                    return;
+                }
+                const data = await window.store.api('/auth/register', 'POST', this.form);
                 window.store.setAuth(data.token, data.user);
             } catch (e) {
-                this.error = 'Registration failed. Please try again.';
+                this.error = e.message || 'Registration failed. Please try again.';
             } finally {
                 this.loading = false;
             }

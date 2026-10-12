@@ -41,6 +41,10 @@ const app = createApp({
         };
     },
     watch: {
+        // Forget the department picked from the dashboard once the user leaves Find Doctor
+        'store.currentPage'(page) {
+            if (page !== 'find-doctor') this.findDoctorDeptId = '';
+        },
         // user logs in, load dashboard data
         'store.isLoggedIn'(val) {
             if (val) {

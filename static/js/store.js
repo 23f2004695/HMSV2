@@ -1,9 +1,23 @@
 const { reactive } = Vue;
 
+function readStoredUser() {
+    try {
+        return JSON.parse(localStorage.getItem('hms_user') || '{}');
+    } catch (e) {
+        return {};
+    }
+}
+
+// YYYY-MM-DD in the browser's local timezone (toISOString() would give the UTC date)
+function localDateStr(d) {
+    const pad = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+
 const store = reactive({
     //Auth State
     token: localStorage.getItem('hms_token') || '',
-    user: JSON.parse(localStorage.getItem('hms_user') || '{}'),
+    user: readStoredUser(),
     isLoggedIn: !!localStorage.getItem('hms_token'),
 
     //Navigation
@@ -14,7 +28,7 @@ const store = reactive({
     alertType: 'success',
     _alertTimer: null,
 
-    //Shared Data 
+    //Shared Data
     departments: [],
     doctors: [],
     appointments: [],
@@ -22,18 +36,50 @@ const store = reactive({
 
     //API Helper
     async api(url, method = 'GET', body = null) {
-        const opts = {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + store.token
-            }
-        };
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        if (store.token) opts.headers['Authorization'] = 'Bearer ' + store.token;
         if (body) opts.body = JSON.stringify(body);
-        const res = await fetch('/api' + url, opts);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Request failed');
+
+        let res;
+        try {
+            res = await fetch('/api' + url, opts);
+        } catch (e) {
+            throw new Error('Could not reach the server. Check your connection and try again.');
+        }
+
+        let data = null;
+        try {
+            data = await res.json();
+        } catch (e) {
+            data = null;
+        }
+
+        if (res.status === 401 && store.isLoggedIn) {
+            store.logout();
+            store.showAlert((data && data.error) || 'Your session has expired. Please log in again.', 'warning');
+        }
+        if (!res.ok) throw new Error((data && (data.error || data.msg)) || 'Request failed (' + res.status + ')');
         return data;
+    },
+
+    // Download a protected file (plain links can't send the auth header)
+    async download(filename) {
+        const res = await fetch('/api/download/' + encodeURIComponent(filename), {
+            headers: { 'Authorization': 'Bearer ' + store.token }
+        });
+        if (!res.ok) {
+            let message = 'Download failed';
+            try { message = (await res.json()).error || message; } catch (e) { /* not JSON */ }
+            throw new Error(message);
+        }
+        const url = URL.createObjectURL(await res.blob());
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
     },
 
     //Auth Actions
@@ -43,6 +89,11 @@ const store = reactive({
         store.isLoggedIn = true;
         localStorage.setItem('hms_token', token);
         localStorage.setItem('hms_user', JSON.stringify(user));
+    },
+
+    updateUser(fields) {
+        Object.assign(store.user, fields);
+        localStorage.setItem('hms_user', JSON.stringify(store.user));
     },
 
     logout() {
@@ -61,6 +112,7 @@ const store = reactive({
     //Navigation
     navigate(page) {
         store.currentPage = page;
+        window.scrollTo(0, 0);
     },
 
     //Alert
@@ -80,17 +132,17 @@ const store = reactive({
 
     async loadDoctors(search = '', deptId = '') {
         try {
-            let url = '/doctors?';
-            if (search) url += 'search=' + encodeURIComponent(search) + '&';
-            if (deptId) url += 'department_id=' + deptId;
-            store.doctors = await store.api(url);
+            const params = new URLSearchParams();
+            if (search) params.set('search', search);
+            if (deptId) params.set('department_id', deptId);
+            store.doctors = await store.api('/doctors?' + params.toString());
         } catch (e) { console.error('Failed to load doctors:', e); }
     },
 
     async loadAppointments(statusFilter = '') {
         try {
             let url = '/appointments';
-            if (statusFilter) url += '?status=' + statusFilter;
+            if (statusFilter) url += '?status=' + encodeURIComponent(statusFilter);
             store.appointments = await store.api(url);
         } catch (e) { console.error('Failed to load appointments:', e); }
     },
@@ -109,14 +161,18 @@ const store = reactive({
         return 'bg-secondary';
     },
 
+    isUpcoming(appointment) {
+        return appointment.status === 'Booked' && appointment.date >= store.todayStr;
+    },
+
     get todayStr() {
-        return new Date().toISOString().split('T')[0];
+        return localDateStr(new Date());
     },
 
     get weekLaterStr() {
         const d = new Date();
         d.setDate(d.getDate() + 7);
-        return d.toISOString().split('T')[0];
+        return localDateStr(d);
     }
 });
 

@@ -116,6 +116,8 @@ window.AdminDashboard = {
                     <button class="btn btn-sm btn-outline-primary" @click="store.navigate('appointments')">View All</button>
                 </div>
                 <div class="card-body p-0">
+                    <p class="p-3 text-muted mb-0" v-if="!store.appointments.length">No appointments yet.</p>
+                    <div class="table-responsive" v-else>
                     <table class="table table-hover mb-0">
                         <thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
                         <tbody>
@@ -126,6 +128,7 @@ window.AdminDashboard = {
                             </tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>

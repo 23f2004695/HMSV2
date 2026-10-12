@@ -1,6 +1,6 @@
 body {
     background-color: #f4f6f9;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 .navbar-brand {
@@ -64,4 +64,21 @@ body {
     .card-body .row .col-md-4 {
         margin-bottom: 10px;
     }
+}
+
+.slot-badge {
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.slot-badge:hover {
+    filter: brightness(0.9);
+}
+
+.navbar .nav-link.active {
+    font-weight: 600;
+}
+
+.table-responsive {
+    margin-bottom: 0;
 }

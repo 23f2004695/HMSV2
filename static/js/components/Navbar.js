@@ -8,7 +8,7 @@ window.AppNavbar = {
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="collapse navbar-collapse" id="navbarNav" ref="menu" @click="closeMenu">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
                             <a class="nav-link" :class="{active: store.currentPage === 'dashboard'}" href="#" @click.prevent="store.navigate('dashboard')">Dashboard</a>
@@ -50,5 +50,13 @@ window.AppNavbar = {
     `,
     setup() {
         return { store: window.store };
+    },
+    methods: {
+        // On phones the menu stays open after picking a page unless we close it
+        closeMenu(e) {
+            if (e.target.closest('.nav-link') && this.$refs.menu.classList.contains('show')) {
+                bootstrap.Collapse.getOrCreateInstance(this.$refs.menu).hide();
+            }
+        }
     }
 };

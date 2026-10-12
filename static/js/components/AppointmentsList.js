@@ -11,11 +11,12 @@ window.AppointmentsList = {
             </div>
             <div class="card shadow-sm">
                 <div class="card-body p-0">
-                    <table class="table table-hover mb-0">
+                    <div class="table-responsive" v-if="store.appointments.length">
+                    <table class="table table-hover mb-0 align-middle">
                         <thead><tr><th>ID</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody>
                             <tr v-for="a in store.appointments" :key="a.id">
-                                <td>{{ a.id }}</td><td>{{ a.patient_name }}</td><td>Dr. {{ a.doctor_name }}</td>
+                                <td>{{ a.id }}</td><td>{{ a.patient_name }}</td><td>Dr. {{ a.doctor_name }}<div class="small text-muted">{{ a.department }}</div></td>
                                 <td>{{ a.date }}</td><td>{{ a.time }}</td>
                                 <td><span class="badge" :class="store.statusBadge(a.status)">{{ a.status }}</span></td>
                                 <td>
@@ -35,6 +36,8 @@ window.AppointmentsList = {
                             </tr>
                         </tbody>
                     </table>
+                    </div>
+                    <p class="p-3 text-muted mb-0" v-else>No appointments to show.</p>
                 </div>
             </div>
         </div>

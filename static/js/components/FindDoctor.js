@@ -3,14 +3,14 @@ window.FindDoctor = {
     template: `
         <div>
             <h3 class="mb-3">Find a Doctor</h3>
-            <div class="row mb-3">
+            <div class="row g-2 mb-3">
                 <div class="col-md-4">
                     <select class="form-select" v-model="deptFilter" @change="search">
                         <option value="">All Departments</option>
                         <option v-for="d in store.departments" :key="d.id" :value="d.id">{{ d.name }}</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-5">
                     <div class="input-group">
                         <input type="text" class="form-control" v-model="nameSearch" placeholder="Search by name..." @keyup.enter="search">
                         <button class="btn btn-primary" @click="search">Search</button>
@@ -22,11 +22,12 @@ window.FindDoctor = {
                     <div class="card shadow-sm h-100">
                         <div class="card-body">
                             <h5 class="card-title text-primary">Dr. {{ d.name }}</h5>
-                            <p class="mb-1"><i class="bi bi-heart-pulse"></i> {{ d.specialization }}</p>
-                            <p class="mb-1"><i class="bi bi-building"></i> {{ d.department_name }}</p>
-                            <p class="mb-1"><i class="bi bi-award"></i> {{ d.qualification }}</p>
-                            <p class="mb-1"><i class="bi bi-briefcase"></i> {{ d.experience_years }} years exp.</p>
-                            <p class="mb-2"><i class="bi bi-currency-rupee"></i> Rs. {{ d.consultation_fee }}</p>
+                            <p class="mb-1" v-if="d.specialization"><i class="bi bi-heart-pulse"></i> {{ d.specialization }}</p>
+                            <p class="mb-1" v-if="d.department_name"><i class="bi bi-building"></i> {{ d.department_name }}</p>
+                            <p class="mb-1" v-if="d.qualification"><i class="bi bi-award"></i> {{ d.qualification }}</p>
+                            <p class="mb-1"><i class="bi bi-briefcase"></i> {{ d.experience_years }} {{ d.experience_years === 1 ? 'year' : 'years' }} experience</p>
+                            <p class="mb-2"><i class="bi bi-currency-rupee"></i> {{ d.consultation_fee }}</p>
+                            <p class="small text-muted" v-if="d.bio">{{ d.bio }}</p>
                             <div class="d-flex gap-2">
                                 <button class="btn btn-sm btn-outline-info" @click="$emit('view-availability', d)">View Availability</button>
                                 <button class="btn btn-sm btn-primary" @click="$emit('book-doctor', d)">Book Appointment</button>

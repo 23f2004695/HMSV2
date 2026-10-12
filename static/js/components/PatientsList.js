@@ -9,7 +9,8 @@ window.PatientsList = {
             </div>
             <div class="card shadow-sm">
                 <div class="card-body p-0">
-                    <table class="table table-hover mb-0">
+                    <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
                         <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Gender</th><th>Blood Group</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody>
                             <tr v-for="p in patients" :key="p.id" :class="{'table-secondary': !p.is_active}">
@@ -27,6 +28,8 @@ window.PatientsList = {
                             </tr>
                         </tbody>
                     </table>
+                    </div>
+                    <p class="p-3 text-muted mb-0" v-if="!patients.length">No patients found.</p>
                 </div>
             </div>
         </div>
@@ -43,7 +46,7 @@ window.PatientsList = {
                 let url = '/patients';
                 if (this.searchText) url += '?search=' + encodeURIComponent(this.searchText);
                 this.patients = await this.store.api(url);
-            } catch (e) { console.error(e); }
+            } catch (e) { this.store.showAlert(e.message, 'danger'); }
         },
         async deactivate(id) {
             if (!confirm('Deactivate this patient?')) return;

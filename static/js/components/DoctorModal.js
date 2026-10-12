@@ -1,6 +1,5 @@
 window.DoctorModal = {
     props: {
-        doctor: { type: Object, default: null },
         departments: { type: Array, default: () => [] }
     },
     emits: ['saved'],
@@ -13,6 +12,7 @@ window.DoctorModal = {
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+                        <div class="alert alert-danger py-2" v-if="error">{{ error }}</div>
                         <div class="mb-3" v-if="!form.id">
                             <label class="form-label">Username *</label>
                             <input type="text" class="form-control" v-model="form.username" required>
@@ -51,11 +51,11 @@ window.DoctorModal = {
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Experience (years)</label>
-                                <input type="number" class="form-control" v-model.number="form.experience_years">
+                                <input type="number" class="form-control" v-model.number="form.experience_years" min="0">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Consultation Fee</label>
-                                <input type="number" class="form-control" v-model.number="form.consultation_fee">
+                                <input type="number" class="form-control" v-model.number="form.consultation_fee" min="0">
                             </div>
                         </div>
                         <div class="mb-3">
@@ -65,7 +65,10 @@ window.DoctorModal = {
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" @click="save">{{ form.id ? 'Update' : 'Add' }} Doctor</button>
+                        <button type="button" class="btn btn-primary" @click="save" :disabled="saving">
+                            <span v-if="saving" class="spinner-border spinner-border-sm me-1"></span>
+                            {{ form.id ? 'Update' : 'Add' }} Doctor
+                        </button>
                     </div>
                 </div>
             </div>
@@ -74,17 +77,10 @@ window.DoctorModal = {
     data() {
         return {
             form: this.getEmptyForm(),
+            error: '',
+            saving: false,
             bsModal: null
         };
-    },
-    watch: {
-        doctor(newVal) {
-            if (newVal) {
-                this.form = { ...newVal };
-            } else {
-                this.form = this.getEmptyForm();
-            }
-        }
     },
     mounted() {
         this.bsModal = new bootstrap.Modal(this.$refs.modal);
@@ -98,7 +94,10 @@ window.DoctorModal = {
             };
         },
         show(doctor = null) {
-            this.form = doctor ? { ...doctor } : this.getEmptyForm();
+            this.form = doctor
+                ? { ...this.getEmptyForm(), ...doctor, department_id: doctor.department_id || '', password: '' }
+                : this.getEmptyForm();
+            this.error = '';
             this.bsModal.show();
         },
         hide() {
@@ -106,18 +105,35 @@ window.DoctorModal = {
         },
         async save() {
             const s = window.store;
+            const f = this.form;
+            this.error = '';
+            if (!f.name.trim() || !f.email.trim() || (!f.id && (!f.username.trim() || !f.password))) {
+                this.error = 'Please fill in all the required fields';
+                return;
+            }
+            const payload = {
+                name: f.name, email: f.email, phone: f.phone,
+                department_id: f.department_id || null,
+                specialization: f.specialization, qualification: f.qualification,
+                experience_years: f.experience_years, consultation_fee: f.consultation_fee, bio: f.bio
+            };
+            if (!f.id) Object.assign(payload, { username: f.username, password: f.password });
+
+            this.saving = true;
             try {
-                if (this.form.id) {
-                    await s.api('/doctors/' + this.form.id, 'PUT', this.form);
+                if (f.id) {
+                    await s.api('/doctors/' + f.id, 'PUT', payload);
                     s.showAlert('Doctor updated successfully');
                 } else {
-                    await s.api('/doctors', 'POST', this.form);
+                    await s.api('/doctors', 'POST', payload);
                     s.showAlert('Doctor added successfully');
                 }
                 this.hide();
                 this.$emit('saved');
             } catch (e) {
-                s.showAlert(e.message, 'danger');
+                this.error = e.message;
+            } finally {
+                this.saving = false;
             }
         }
     }

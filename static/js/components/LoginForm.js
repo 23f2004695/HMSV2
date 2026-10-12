@@ -37,19 +37,14 @@ window.LoginForm = {
             this.error = '';
             this.loading = true;
             try {
-                const data = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.form)
-                }).then(r => r.json());
-
-                if (data.error) {
-                    this.error = data.error;
+                if (!this.form.username.trim() || !this.form.password) {
+                    this.error = 'Please enter your username and password';
                     return;
                 }
+                const data = await window.store.api('/auth/login', 'POST', this.form);
                 window.store.setAuth(data.token, data.user);
             } catch (e) {
-                this.error = 'Login failed. Please try again.';
+                this.error = e.message || 'Login failed. Please try again.';
             } finally {
                 this.loading = false;
             }

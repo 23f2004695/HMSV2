@@ -1,5 +1,4 @@
 window.PatientDashboard = {
-    emits: ['find-doctor-dept'],
     template: `
         <div>
             <h3 class="mb-4">Welcome, {{ store.user.name }}</h3>
@@ -17,7 +16,7 @@ window.PatientDashboard = {
                                         <div class="card-body text-center py-3">
                                             <i class="bi bi-heart-pulse fs-3 text-primary"></i>
                                             <h6 class="mt-2 mb-0">{{ dept.name }}</h6>
-                                            <small class="text-muted">{{ dept.doctors_count }} doctors</small>
+                                            <small class="text-muted">{{ dept.doctors_count }} {{ dept.doctors_count === 1 ? 'doctor' : 'doctors' }}</small>
                                         </div>
                                     </div>
                                 </div>
@@ -31,7 +30,8 @@ window.PatientDashboard = {
                             <button class="btn btn-sm btn-light" @click="store.navigate('find-doctor')">Book New</button>
                         </div>
                         <div class="card-body p-0">
-                            <table class="table table-hover mb-0" v-if="upcomingAppointments.length">
+                            <div class="table-responsive" v-if="upcomingAppointments.length">
+                            <table class="table table-hover mb-0">
                                 <thead><tr><th>Doctor</th><th>Department</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
                                 <tbody>
                                     <tr v-for="a in upcomingAppointments" :key="a.id">
@@ -49,7 +49,8 @@ window.PatientDashboard = {
                                     </tr>
                                 </tbody>
                             </table>
-                            <p class="p-3 text-muted" v-else>No upcoming appointments. <a href="#" @click.prevent="store.navigate('find-doctor')">Book one now!</a></p>
+                            </div>
+                            <p class="p-3 text-muted mb-0" v-else>No upcoming appointments. <a href="#" @click.prevent="store.navigate('find-doctor')">Book one now!</a></p>
                         </div>
                     </div>
                 </div>
@@ -73,10 +74,11 @@ window.PatientDashboard = {
                         </div>
                         <div class="card-body p-0">
                             <div class="list-group list-group-flush">
+                                <div class="list-group-item text-muted" v-if="!pastAppointments.length">No past visits yet.</div>
                                 <div class="list-group-item" v-for="a in pastAppointments.slice(0, 5)" :key="a.id">
                                     <div class="d-flex justify-content-between">
                                         <strong>Dr. {{ a.doctor_name }}</strong>
-                                        <span class="badge" :class="store.statusBadge(a.status)">{{ a.status }}</span>
+                                        <span class="badge" :class="store.statusBadge(a.status)">{{ a.status === 'Booked' ? 'Missed' : a.status }}</span>
                                     </div>
                                     <small class="text-muted">{{ a.date }} | {{ a.time }}</small>
                                     <div v-if="a.treatment"><small class="text-success">Diagnosis: {{ a.treatment.diagnosis }}</small></div>
@@ -97,11 +99,12 @@ window.PatientDashboard = {
     },
     computed: {
         upcomingAppointments() {
-            const today = this.store.todayStr;
-            return this.store.appointments.filter(a => a.date >= today && a.status === 'Booked');
+            return this.store.appointments
+                .filter(a => this.store.isUpcoming(a))
+                .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
         },
         pastAppointments() {
-            return this.store.appointments.filter(a => a.status === 'Completed' || a.status === 'Cancelled');
+            return this.store.appointments.filter(a => !this.store.isUpcoming(a));
         }
     },
     async created() {

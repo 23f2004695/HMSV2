@@ -42,8 +42,8 @@ window.DoctorDashboard = {
                                 <thead><tr><th>Name</th><th>Last Visit</th><th>Actions</th></tr></thead>
                                 <tbody>
                                     <tr v-for="p in doctorPatients" :key="p.patient_id">
-                                        <td>{{ p.name }}</td><td>{{ p.last_visit }}</td>
-                                        <td><button class="btn btn-sm btn-info" @click="$emit('view-history', p.patient_id)"><i class="bi bi-clock-history"></i></button></td>
+                                        <td>{{ p.name }}</td><td>{{ p.last_visit || '-' }}</td>
+                                        <td><button class="btn btn-sm btn-info" @click="$emit('view-history', p.patient_id)" title="View history"><i class="bi bi-clock-history"></i></button></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -60,19 +60,17 @@ window.DoctorDashboard = {
     },
     computed: {
         upcomingAppointments() {
-            const today = this.store.todayStr;
-            return this.store.appointments.filter(a => a.date >= today && a.status === 'Booked');
+            return this.store.appointments
+                .filter(a => this.store.isUpcoming(a))
+                .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
         },
         doctorPatients() {
-            const seen = {};
-            const result = [];
+            const byPatient = {};
             for (const a of this.store.appointments) {
-                if (!seen[a.patient_id]) {
-                    seen[a.patient_id] = true;
-                    result.push({ patient_id: a.patient_id, name: a.patient_name, last_visit: a.date });
-                }
+                const p = byPatient[a.patient_id] || (byPatient[a.patient_id] = { patient_id: a.patient_id, name: a.patient_name, last_visit: null });
+                if (a.status === 'Completed' && (!p.last_visit || a.date > p.last_visit)) p.last_visit = a.date;
             }
-            return result;
+            return Object.values(byPatient).sort((a, b) => a.name.localeCompare(b.name));
         }
     },
     async created() {
