@@ -31,6 +31,14 @@
         .brand .heart { color: var(--red); background: #ffecee; border-radius: 12px; padding: 0.15em 0.3em; animation: beat 1.6s ease-in-out infinite; }
         .title { color: var(--blue); font-weight: 900; letter-spacing: 0.3em; font-size: clamp(0.9rem, 1.4vw, 1.3rem); }
         .clock { margin-left: auto; text-align: right; }
+        .back {
+            display: inline-flex; align-items: center; gap: 0.45rem;
+            margin-left: 1.5vw; padding: 0.5rem 1rem; border-radius: 999px;
+            background: #e9f0ff; color: var(--blue); border: 1px solid #c9d7f7;
+            font: inherit; font-weight: 800; font-size: clamp(0.8rem, 1vw, 1rem);
+            text-decoration: none; cursor: pointer; transition: transform 0.2s, background-color 0.2s;
+        }
+        .back:hover { background: var(--blue); color: #fff; transform: translateX(-3px); }
         .clock .time { font-family: 'JetBrains Mono', monospace; font-size: clamp(1.4rem, 3vw, 2.8rem); }
         .clock .date { color: var(--muted); font-size: clamp(0.7rem, 1vw, 1rem); }
 
@@ -115,6 +123,7 @@
         <div class="brand"><i class="bi bi-heart-pulse-fill heart"></i> HMS</div>
         <div class="title">NOW SERVING</div>
         <div class="clock"><div class="time" id="time">--:--</div><div class="date" id="date"></div></div>
+        <a class="back" id="back" href="/"><i class="bi bi-arrow-left"></i> Back to app</a>
     </header>
 
     <main>
@@ -273,6 +282,19 @@
                 if (res.ok) render(await res.json());
             } catch (e) { /* try again next tick */ }
         }
+
+        // Go back to where we came from in the app, or to the app's home if the screen was opened on its own
+        document.getElementById('back').addEventListener('click', e => {
+            const fromApp = document.referrer && new URL(document.referrer).origin === location.origin;
+            if (fromApp && history.length > 1) {
+                e.preventDefault();
+                history.back();
+            } else if (window.opener && !window.opener.closed) {
+                e.preventDefault();
+                window.opener.focus();
+                window.close();
+            }
+        });
 
         document.getElementById('sound').addEventListener('click', e => {
             soundOn = !soundOn;
