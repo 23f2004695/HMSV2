@@ -4,7 +4,7 @@ window.AppNavbar = {
         <nav class="navbar navbar-expand-lg hms-navbar" v-if="store.isLoggedIn">
             <div class="container-fluid">
                 <a class="navbar-brand" href="#" @click.prevent="store.navigate('dashboard')">
-                    <span class="brand-heart"><i class="bi bi-heart-pulse-fill"></i></span> HMS
+                    <span class="brand-heart" :class="{ beat: spiking }"><i class="bi bi-heart-pulse-fill"></i></span> HMS
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Menu">
                     <i class="bi bi-list fs-3"></i>
@@ -26,9 +26,6 @@ window.AppNavbar = {
                         <button class="btn btn-sm btn-outline-secondary d-none d-lg-inline-flex align-items-center gap-2" @click="$emit('open-palette')">
                             <i class="bi bi-search"></i> Search or type a command <span class="kbd-hint">Ctrl K</span>
                         </button>
-                        <button class="theme-toggle" @click="store.cycleTheme()" :title="'Theme: ' + store.themePref">
-                            <i class="bi" :class="themeIcon"></i>
-                        </button>
                         <div class="dropdown">
                             <a href="#" class="d-flex align-items-center gap-2 text-decoration-none" data-bs-toggle="dropdown" aria-expanded="false">
                                 <span class="avatar" style="width:36px;height:36px;font-size:0.8rem" :style="{ background: store.avatarColor(store.user.name) }">{{ store.initials(store.user.name) }}</span>
@@ -44,7 +41,6 @@ window.AppNavbar = {
                     </div>
                 </div>
             </div>
-            <div class="nav-ecg"><ecg-line :beats="6" :height="18" :spike="spiking"></ecg-line></div>
         </nav>
     `,
     setup() {
@@ -54,7 +50,7 @@ window.AppNavbar = {
         return { spiking: false };
     },
     watch: {
-        // A booking (or similar) makes the heartbeat spike for a few seconds
+        // A booking (or similar) makes the logo heart beat
         'store.pulseKey'() {
             this.spiking = false;
             this.$nextTick(() => {
@@ -77,9 +73,6 @@ window.AppNavbar = {
                 { page: 'my-history', label: 'My Journey', icon: 'bi-signpost-split', roles: ['patient'] }
             ];
             return all.filter(l => l.roles.includes(role));
-        },
-        themeIcon() {
-            return { auto: 'bi-circle-half', light: 'bi-sun', dark: 'bi-moon-stars' }[this.store.themePref];
         }
     },
     methods: {

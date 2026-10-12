@@ -9,7 +9,7 @@ window.SlotPicker = {
     emits: ['update:modelValue'],
     template: `
         <div class="slot-picker">
-            <ecg-loader v-if="loading" text="Checking the doctor's diary..."></ecg-loader>
+            <app-loader v-if="loading" text="Checking the doctor's diary..."></app-loader>
             <template v-else>
                 <div class="week-strip mb-3" role="listbox" aria-label="Pick a day">
                     <button v-for="d in days" :key="d.date" type="button" class="day-chip"
@@ -20,7 +20,7 @@ window.SlotPicker = {
                         <span class="free">{{ d.slots.length ? d.slots.length + ' free' : 'full' }}</span>
                     </button>
                 </div>
-                <div v-if="!anyFree" class="empty-state py-3"><i class="bi bi-calendar-x"></i>No free slots in the next week.</div>
+                <empty-state v-if="!anyFree" illo="doctor-tablet" title="Fully booked" text="No free slots in the next week. Try another doctor."></empty-state>
                 <div v-else-if="currentDay">
                     <div class="d-flex justify-content-between align-items-baseline mb-2">
                         <div class="small fw-semibold">{{ longDate(currentDay.date) }}</div>

@@ -60,6 +60,7 @@ window.BoardingPass = {
                     </ul>
                     <div v-if="appointment.reason" class="small"><span class="pass-label d-inline">Reason:</span> {{ appointment.reason }}</div>
                     <div class="pass-hint mt-auto"><i class="bi bi-arrow-repeat"></i> tap to flip back</div>
+                    <img class="back-illo" src="/static/img/illos/nurse-notes.webp" alt="">
                 </div>
             </div>
 

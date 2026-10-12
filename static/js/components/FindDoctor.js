@@ -44,13 +44,14 @@ window.FindDoctor = {
                 <span class="badge bg-primary-subtle text-primary">{{ shownDoctors.length }}</span>
             </div>
 
-            <ecg-loader v-if="loading" text="Finding doctors..."></ecg-loader>
-            <div v-else-if="mode === 'body' && !picked" class="text-center text-muted small">Pick a symptom above and matching doctors will appear here.</div>
+            <app-loader v-if="loading" text="Finding doctors..."></app-loader>
+            <div v-else-if="mode === 'body' && !picked" class="text-center text-muted small fw-semibold">Pick a symptom above and matching doctors will appear here.</div>
             <transition-group v-else name="list" tag="div" class="row g-3 position-relative">
                 <div class="col-md-6 col-xl-4" v-for="d in shownDoctors" :key="d.id">
                     <div class="card doctor-card h-100">
                         <div class="card-body">
-                            <div class="d-flex gap-3 align-items-center mb-3">
+                            <illo class="card-mascot" :name="deptArt(d.department_name).img" :tips="[deptArt(d.department_name).tip]"></illo>
+                            <div class="d-flex gap-3 align-items-center mb-3" style="padding-right: 80px">
                                 <span class="avatar avatar-lg" :style="{ background: store.avatarColor(d.name) }">{{ d.initials || store.initials(d.name) }}</span>
                                 <div>
                                     <h5 class="mb-0">Dr. {{ d.name }}</h5>
@@ -81,9 +82,8 @@ window.FindDoctor = {
                     </div>
                 </div>
             </transition-group>
-            <div class="empty-state" v-if="!loading && (mode === 'browse' || picked) && !shownDoctors.length">
-                <i class="bi bi-person-x"></i>No doctors found{{ picked && mode === 'body' ? ' in ' + picked.department + ' right now' : '' }}.
-            </div>
+            <empty-state v-if="!loading && (mode === 'browse' || picked) && !shownDoctors.length" illo="doctor-magnifier"
+                         title="No doctors found" :text="picked && mode === 'body' ? 'Nobody in ' + picked.department + ' is taking bookings right now.' : 'Try another name or department.'"></empty-state>
         </div>
     `,
     data() {
@@ -136,6 +136,9 @@ window.FindDoctor = {
             await this.store.loadDoctors(this.mode === 'browse' ? this.nameSearch : '', this.mode === 'browse' ? this.deptFilter : '');
             this.loading = false;
             this.shownDoctors.forEach(d => this.loadNextFree(d));
+        },
+        deptArt(name) {
+            return window.deptIllo(name);
         },
         onPick(pick) {
             this.picked = pick;

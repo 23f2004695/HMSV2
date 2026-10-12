@@ -47,7 +47,7 @@ window.AppointmentsList = {
                         </tbody>
                     </table>
                     </div>
-                    <div class="empty-state" v-else><i class="bi bi-calendar2-x"></i>No appointments to show.</div>
+                    <empty-state v-else illo="nurse-clipboard" title="Nothing here" text="No appointments match this filter."></empty-state>
                 </div>
             </div>
         </div>

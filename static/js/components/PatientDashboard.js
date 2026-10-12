@@ -8,13 +8,12 @@ window.PatientDashboard = {
                 <h5 class="fw-bold mb-0"><i class="bi bi-ticket-perforated me-1"></i> My tickets</h5>
                 <button class="btn btn-sm btn-primary" @click="store.navigate('find-doctor')"><i class="bi bi-plus-lg"></i> Book new</button>
             </div>
-            <ecg-loader v-if="loading" text="Fetching your tickets..."></ecg-loader>
+            <app-loader v-if="loading" text="Fetching your tickets..."></app-loader>
             <div v-else-if="!upcoming.length" class="card mb-4">
-                <div class="empty-state">
-                    <i class="bi bi-ticket-perforated"></i>
-                    No upcoming appointments.
-                    <div class="mt-3"><button class="btn btn-primary" @click="store.navigate('find-doctor')">Book one now</button></div>
-                </div>
+                <empty-state illo="patient-cheer" title="No upcoming appointments" text="Feeling great? Brilliant. If not, we're a few taps away."
+                             :tips="['Stay hydrated!', 'Tap Book new when you need us.']">
+                    <button class="btn btn-primary" @click="store.navigate('find-doctor')">Book an appointment</button>
+                </empty-state>
             </div>
             <div v-else class="ticket-rail mb-4">
                 <transition-group name="list">
@@ -32,7 +31,7 @@ window.PatientDashboard = {
                 <div class="col-lg-8">
                     <div class="card body-cta mb-4" @click="store.navigate('find-doctor')" role="button">
                         <div class="card-body d-flex align-items-center gap-3">
-                            <span class="cta-icon"><i class="bi bi-person-arms-up"></i></span>
+                            <illo name="nurse-notes" :tips="['Tell me where it hurts!']"></illo>
                             <div>
                                 <h5 class="mb-1 fw-bold">Not feeling well?</h5>
                                 <div class="text-muted">Tap where it hurts and we'll find the right doctor for you.</div>
@@ -44,14 +43,12 @@ window.PatientDashboard = {
                     <div class="card">
                         <div class="card-header"><i class="bi bi-building me-1"></i> Departments</div>
                         <div class="card-body">
-                            <div class="row g-2 stagger">
-                                <div class="col-md-4 col-6" v-for="dept in store.departments" :key="dept.id">
-                                    <div class="card h-100 dept-card" @click="$emit('find-doctor-dept', dept.id)">
-                                        <div class="card-body text-center py-3">
-                                            <i class="bi fs-3 text-primary" :class="deptIcon(dept.name)"></i>
-                                            <h6 class="mt-2 mb-0">{{ dept.name }}</h6>
-                                            <small class="text-muted">{{ dept.doctors_count }} {{ dept.doctors_count === 1 ? 'doctor' : 'doctors' }}</small>
-                                        </div>
+                            <div class="row g-3 stagger">
+                                <div class="col-md-3 col-6" v-for="dept in store.departments" :key="dept.id">
+                                    <div class="dept-tile" :style="{ '--tile-tint': deptArt(dept.name).tint }" @click="$emit('find-doctor-dept', dept.id)">
+                                        <illo :name="deptArt(dept.name).img" :tips="[deptArt(dept.name).tip]" hover-talk></illo>
+                                        <h6>{{ dept.name }}</h6>
+                                        <small>{{ dept.doctors_count }} {{ dept.doctors_count === 1 ? 'doctor' : 'doctors' }}</small>
                                     </div>
                                 </div>
                             </div>
@@ -115,12 +112,8 @@ window.PatientDashboard = {
         this.loading = false;
     },
     methods: {
-        deptIcon(name) {
-            return {
-                'Cardiology': 'bi-heart-pulse', 'Orthopedics': 'bi-person-walking', 'Dermatology': 'bi-droplet-half',
-                'Pediatrics': 'bi-balloon-heart', 'Neurology': 'bi-lightning', 'ENT': 'bi-ear',
-                'Ophthalmology': 'bi-eye', 'General Medicine': 'bi-capsule'
-            }[name] || 'bi-hospital';
+        deptArt(name) {
+            return window.deptIllo(name);
         },
         async cancelAppointment(a) {
             if (!confirm('Cancel your appointment with Dr. ' + a.doctor_name + ' on ' + a.date + ' at ' + a.time + '?')) return;

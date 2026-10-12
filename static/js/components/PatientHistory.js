@@ -24,8 +24,8 @@ window.PatientHistory = {
                 </div>
             </div>
 
-            <ecg-loader v-if="loading" text="Loading history..."></ecg-loader>
-            <div v-else-if="!history.length" class="card"><div class="empty-state"><i class="bi bi-signpost"></i>No visits yet. Your journey starts with your first appointment.</div></div>
+            <app-loader v-if="loading" text="Loading history..."></app-loader>
+            <div v-else-if="!history.length" class="card"><empty-state illo="heart-hug" title="No visits yet" text="Your journey starts with your first appointment."></empty-state></div>
 
             <template v-else-if="view === 'map'">
                 <div class="card mb-3">
@@ -44,7 +44,8 @@ window.PatientHistory = {
                 </div>
                 <transition name="page" mode="out-in">
                     <div v-if="selected" :key="selected.id" class="card station-card" :style="{ borderTopColor: color(selected.department) }">
-                        <div class="card-body">
+                        <illo class="station-illo d-none d-md-inline-block" :name="deptArt(selected.department).img" :tips="[deptArt(selected.department).tip]" pop></illo>
+                        <div class="card-body" style="padding-right: 8rem">
                             <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
                                 <div>
                                     <h5 class="mb-0">{{ selected.department }} &middot; Dr. {{ selected.doctor_name }}</h5>
@@ -119,6 +120,7 @@ window.PatientHistory = {
     },
     methods: {
         x(i) { return 70 + i * 150; },
+        deptArt(name) { return window.deptIllo(name); },
         color(dept) {
             return {
                 'Cardiology': '#e11d48', 'Orthopedics': '#f59e0b', 'Dermatology': '#a855f7', 'Pediatrics': '#ec4899',

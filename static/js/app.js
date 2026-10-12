@@ -8,9 +8,6 @@ const app = createApp({
         const viewHistoryPatientId = ref(null);
 
         onMounted(() => {
-            s.applyTheme();
-            // Re-check every few minutes so 'auto' theme and the greeting follow the clock
-            setInterval(() => s.applyTheme(), 5 * 60 * 1000);
             if (s.isLoggedIn) {
                 loadInitialData();
             }
@@ -71,23 +68,7 @@ const app = createApp({
 
         <!-- Auth Pages (not logged in) -->
         <div v-if="!store.isLoggedIn" class="auth-shell">
-            <div class="auth-art">
-                <span class="orb" style="width:320px;height:320px;background:#60a5fa;top:-60px;left:-80px"></span>
-                <span class="orb" style="width:260px;height:260px;background:#f472b6;bottom:-60px;right:-40px;animation-delay:-5s"></span>
-                <div class="position-relative">
-                    <div class="d-flex align-items-center gap-2 mb-4 fs-5 fw-bold">
-                        <span class="brand-heart" style="background:rgba(255,255,255,0.2);color:#fff"><i class="bi bi-heart-pulse-fill"></i></span> HMS
-                    </div>
-                    <h1>Care that runs<br>on time.</h1>
-                    <p class="mt-3">Book a doctor in seconds, follow your place in the queue live, and keep every prescription in one place.</p>
-                    <div class="d-flex flex-wrap gap-3 mt-4 small">
-                        <span><i class="bi bi-person-arms-up me-1"></i> Tap where it hurts</span>
-                        <span><i class="bi bi-ticket-perforated me-1"></i> Live queue tickets</span>
-                        <span><i class="bi bi-tv me-1"></i> Lobby screen</span>
-                    </div>
-                </div>
-                <ecg-line class="auth-ecg" :beats="4" :height="90"></ecg-line>
-            </div>
+            <auth-showcase></auth-showcase>
             <div class="auth-form">
                 <transition name="page" mode="out-in">
                     <login-form    v-if="authMode === 'login'"    key="login"    @switch-to-register="authMode = 'register'"></login-form>
@@ -161,8 +142,10 @@ const app = createApp({
 
 //  Register All Components 
 app.component('toast-stack',         window.ToastStack);
-app.component('ecg-line',            window.EcgLine);
-app.component('ecg-loader',          window.EcgLoader);
+app.component('illo',                window.Illo);
+app.component('app-loader',          window.AppLoader);
+app.component('empty-state',         window.EmptyState);
+app.component('auth-showcase',       window.AuthShowcase);
 app.component('hero-greeting',       window.HeroGreeting);
 app.component('stat-tile',           window.StatTile);
 app.component('slot-picker',         window.SlotPicker);

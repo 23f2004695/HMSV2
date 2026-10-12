@@ -13,6 +13,8 @@ window.DoctorDashboard = {
                                 <span class="text-muted small text-uppercase fw-semibold">Now serving &middot; {{ room }}</span>
                                 <span v-if="current" class="badge bg-success-subtle text-success"><span class="live-dot"></span>In room</span>
                             </div>
+                            <illo class="serving-illo" :key="'nurse-' + (current ? current.token : 'none')" :name="current ? 'nurse-wave' : 'nurse-notes'"
+                                  :tips="current ? ['Calling ' + current.token + ' to ' + room + '!'] : ['Ready when you are, doctor.']" pop></illo>
                             <transition name="flip-token" mode="out-in">
                                 <div :key="current ? current.token : 'none'" class="serving-token">{{ current ? current.token : '--' }}</div>
                             </transition>
@@ -49,8 +51,8 @@ window.DoctorDashboard = {
                         <div class="progress rounded-0" style="height: 4px">
                             <div class="progress-bar bg-success" :style="{ width: progress + '%', transition: 'width 0.8s ease' }"></div>
                         </div>
-                        <ecg-loader v-if="loading" text="Loading today's queue..."></ecg-loader>
-                        <div v-else-if="!todayQueue.length" class="empty-state"><i class="bi bi-cup-hot"></i>No appointments today. Enjoy the quiet!</div>
+                        <app-loader v-if="loading" text="Loading today's queue..."></app-loader>
+                        <empty-state v-else-if="!todayQueue.length" illo="heart-present" title="No appointments today" text="Enjoy the quiet day!"></empty-state>
                         <transition-group v-else name="list" tag="ul" class="list-group list-group-flush queue-list position-relative">
                             <li v-for="a in todayQueue" :key="a.id" class="list-group-item d-flex align-items-center gap-3" :class="'q-' + stateOf(a)">
                                 <code class="q-token">{{ a.token }}</code>

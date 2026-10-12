@@ -34,29 +34,33 @@ const BODY_REGIONS = {
         { text: 'Rash or skin patches', dept: 'Dermatology' }] }
 };
 
+// Where each region sits on the patient-cheer illustration, in % of its width/height
+const HOTSPOTS = [
+    { region: 'head', x: 52, y: 9, label: 'Head' },
+    { region: 'eyes', x: 52, y: 21, label: 'Eyes' },
+    { region: 'throat', x: 51, y: 35, label: 'Ear, nose & throat' },
+    { region: 'chest', x: 50, y: 46, label: 'Chest' },
+    { region: 'stomach', x: 50, y: 58, label: 'Stomach' },
+    { region: 'arms', x: 17, y: 33, label: 'Arms & hands' },
+    { region: 'arms', x: 84, y: 32, label: 'Arms & hands' },
+    { region: 'legs', x: 29, y: 74, label: 'Legs & feet' },
+    { region: 'legs', x: 71, y: 74, label: 'Legs & feet' }
+];
+
 window.BodyMap = {
     emits: ['pick'],
     template: `
         <div class="row g-4 align-items-center body-map">
             <div class="col-md-5 text-center">
-                <svg viewBox="0 0 200 420" class="body-svg" role="group" aria-label="Body map">
-                    <defs>
-                        <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0" stop-color="var(--body-fill-top)"></stop>
-                            <stop offset="1" stop-color="var(--body-fill-bottom)"></stop>
-                        </linearGradient>
-                    </defs>
-                    <g v-for="part in parts" :key="part.id" class="body-part"
-                       :class="{ selected: region === part.region, hovered: hover === part.region }"
-                       tabindex="0" role="button" :aria-label="regions[part.region].label"
-                       @mouseenter="hover = part.region" @mouseleave="hover = ''"
-                       @click="select(part.region)" @keydown.enter="select(part.region)">
-                        <component :is="part.tag" v-bind="part.attrs"></component>
-                    </g>
-                    <circle v-if="pin" class="pin-ring" :cx="pin.x" :cy="pin.y" r="10"></circle>
-                    <circle v-if="pin" class="pin-dot" :cx="pin.x" :cy="pin.y" r="4"></circle>
-                </svg>
-                <div class="small text-muted mt-2">{{ hover ? regions[hover].label : 'Tap where it hurts' }}</div>
+                <div class="body-figure" :class="{ picked: region }">
+                    <img src="/static/img/illos/patient-cheer.webp" alt="A patient. Tap the part of the body that hurts." draggable="false">
+                    <button v-for="(h, i) in hotspots" :key="i" type="button" class="hotspot" :class="{ active: region === h.region }"
+                            :style="{ left: h.x + '%', top: h.y + '%', '--delay': (i * 0.25) + 's' }"
+                            :aria-label="h.label" @click="select(h.region)">
+                        <span class="hotspot-label">{{ h.label }}</span>
+                    </button>
+                </div>
+                <div class="small text-muted mt-2 fw-semibold">Tap a dot where it hurts</div>
             </div>
             <div class="col-md-7" ref="panel">
                 <transition name="page" mode="out-in">
@@ -68,7 +72,7 @@ window.BodyMap = {
                             <label class="form-check-label" for="forChild">This is for a child</label>
                         </div>
                         <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
-                            <button v-for="(r, key) in regions" :key="key" class="btn btn-sm btn-outline-secondary rounded-pill" @click="select(key)">{{ r.label }}</button>
+                            <button v-for="(r, key) in regions" :key="key" class="symptom-chip" @click="select(key)">{{ r.label }}</button>
                         </div>
                     </div>
                     <div v-else :key="region">
@@ -84,11 +88,14 @@ window.BodyMap = {
                             <input class="form-check-input" type="checkbox" id="forChild2" v-model="forChild">
                             <label class="form-check-label" for="forChild2">This is for a child</label>
                         </div>
-                        <transition name="page">
-                            <div v-if="suggestion" class="suggestion">
-                                <div class="small text-muted">We suggest</div>
-                                <div class="fs-4 fw-bold">{{ suggestion }}</div>
-                                <div class="small text-muted">{{ forChild && suggestion === 'Pediatrics' ? 'Children are seen by our paediatricians first.' : 'Based on: ' + symptom.text.toLowerCase() }}</div>
+                        <transition name="page" mode="out-in">
+                            <div v-if="suggestion" :key="suggestion" class="suggestion">
+                                <illo :name="deptIllo(suggestion).img" :tips="[deptIllo(suggestion).tip]" pop></illo>
+                                <div>
+                                    <div class="small text-muted fw-semibold">We suggest</div>
+                                    <div class="fs-4 fw-bold">{{ suggestion }}</div>
+                                    <div class="small text-muted">{{ forChild && suggestion === 'Pediatrics' ? 'Children are seen by our paediatric team first.' : 'Based on: ' + symptom.text.toLowerCase() }}</div>
+                                </div>
                             </div>
                         </transition>
                     </div>
@@ -97,24 +104,9 @@ window.BodyMap = {
         </div>
     `,
     data() {
-        return { regions: BODY_REGIONS, region: '', hover: '', symptom: null, forChild: false, pin: null };
+        return { regions: BODY_REGIONS, hotspots: HOTSPOTS, region: '', symptom: null, forChild: false };
     },
     computed: {
-        parts() {
-            const r = (x, y, w, h, rx, extra = {}) => ({ tag: 'rect', attrs: { x, y, width: w, height: h, rx, ...extra } });
-            return [
-                { id: 'arm-l', region: 'arms', pin: { x: 40, y: 160 }, ...r(28, 100, 24, 118, 12, { transform: 'rotate(8 40 100)' }) },
-                { id: 'arm-r', region: 'arms', pin: { x: 160, y: 160 }, ...r(148, 100, 24, 118, 12, { transform: 'rotate(-8 160 100)' }) },
-                { id: 'leg-l', region: 'legs', pin: { x: 83, y: 300 }, ...r(70, 222, 27, 168, 13) },
-                { id: 'leg-r', region: 'legs', pin: { x: 117, y: 300 }, ...r(103, 222, 27, 168, 13) },
-                { id: 'stomach', region: 'stomach', pin: { x: 100, y: 190 }, ...r(64, 160, 72, 64, 18) },
-                { id: 'chest', region: 'chest', pin: { x: 100, y: 125 }, ...r(58, 92, 84, 72, 22) },
-                { id: 'neck', region: 'throat', pin: { x: 100, y: 82 }, ...r(88, 70, 24, 26, 8) },
-                { id: 'head', region: 'head', pin: { x: 100, y: 28 }, tag: 'circle', attrs: { cx: 100, cy: 42, r: 30 } },
-                { id: 'eye-l', region: 'eyes', pin: { x: 100, y: 42 }, tag: 'ellipse', attrs: { cx: 89, cy: 42, rx: 6, ry: 4.5 } },
-                { id: 'eye-r', region: 'eyes', pin: { x: 100, y: 42 }, tag: 'ellipse', attrs: { cx: 111, cy: 42, rx: 6, ry: 4.5 } }
-            ];
-        },
         suggestion() {
             if (!this.symptom) return '';
             return this.forChild ? 'Pediatrics' : this.symptom.dept;
@@ -126,11 +118,12 @@ window.BodyMap = {
         }
     },
     methods: {
+        deptIllo(name) {
+            return window.deptIllo(name);
+        },
         select(region) {
             this.region = region;
             this.symptom = null;
-            const part = this.parts.find(p => p.region === region);
-            this.pin = part ? part.pin : null;
             // on phones the symptoms sit below the figure, so bring them into view
             if (window.innerWidth < 768) {
                 this.$nextTick(() => setTimeout(() => this.$refs.panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250));
@@ -142,7 +135,6 @@ window.BodyMap = {
         reset() {
             this.region = '';
             this.symptom = null;
-            this.pin = null;
             this.$emit('pick', null);
         }
     }

@@ -40,7 +40,7 @@ window.AvailabilityManager = {
                 <span class="ms-auto">{{ totalHours }} hours this week</span>
             </div>
 
-            <ecg-loader v-if="loading" text="Loading your diary..."></ecg-loader>
+            <app-loader v-if="loading" text="Loading your diary..."></app-loader>
             <div v-else class="card">
                 <div class="paint-scroll">
                     <div class="paint-grid" :style="{ gridTemplateColumns: '64px repeat(' + days.length + ', minmax(84px, 1fr))' }"

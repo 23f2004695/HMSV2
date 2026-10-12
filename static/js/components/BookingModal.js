@@ -41,10 +41,13 @@ window.BookingModal = {
                             </div>
 
                             <div v-else-if="step === 3 && booked" key="done" class="text-center">
-                                <svg class="success-check" viewBox="0 0 52 52" aria-hidden="true">
-                                    <circle cx="26" cy="26" r="24"></circle>
-                                    <path d="M14 27 l8 8 l16 -17"></path>
-                                </svg>
+                                <div class="success-hero">
+                                    <illo name="patient-cheer" :tips="['See you soon!', 'Don\u2019t forget your pass.']" pop></illo>
+                                    <svg class="success-check" viewBox="0 0 52 52" aria-hidden="true">
+                                        <circle cx="26" cy="26" r="24"></circle>
+                                        <path d="M14 27 l8 8 l16 -17"></path>
+                                    </svg>
+                                </div>
                                 <h4 class="fw-bold mt-2 mb-1">You're booked!</h4>
                                 <p class="text-muted">Here's your pass. Show the QR code at reception.</p>
                                 <div class="pass-pop text-start">

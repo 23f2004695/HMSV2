@@ -62,7 +62,7 @@ window.CommandPalette = {
                         </button>
                         <span class="kbd-hint">Esc</span>
                     </div>
-                    <div v-if="listening" class="palette-listening"><ecg-line :beats="3" :height="30"></ecg-line><span>Listening... try "{{ examples[0] }}"</span></div>
+                    <div v-if="listening" class="palette-listening"><img src="/static/img/illos/nurse-wave.webp" alt=""><span>Listening... try "{{ examples[0] }}"</span></div>
                     <ul class="palette-results">
                         <li v-for="(r, i) in results" :key="r.id" :class="{ active: i === active }" @mouseenter="active = i" @click="run(r)">
                             <i class="bi" :class="r.icon"></i>
@@ -103,7 +103,7 @@ window.CommandPalette = {
             return {
                 patient: ['book cardiology tomorrow at 10', 'cancel my next', 'my journey'],
                 doctor: ['call next', 'add slot friday 9-1', 'my week'],
-                admin: ['patient rahul', 'doctor mehta', 'dark mode']
+                admin: ['patient rahul', 'doctor mehta', 'lobby']
             }[this.role] || [];
         },
         pages() {
@@ -125,7 +125,6 @@ window.CommandPalette = {
             const simple = [
                 ...this.pages,
                 { id: 'lobby', title: 'Open the lobby screen', icon: 'bi-tv', action: () => window.open('/lobby', '_blank') },
-                { id: 'theme', title: 'Switch theme (auto / light / dark)', hint: 'Now: ' + this.store.themePref, icon: 'bi-circle-half', action: () => this.store.cycleTheme() },
                 { id: 'logout', title: 'Log out', icon: 'bi-box-arrow-right', action: () => this.store.logout() }
             ];
             for (const c of simple) {
@@ -186,10 +185,6 @@ window.CommandPalette = {
             if (!q) return;
             const day = parseDay(q);
             const time = parseTime(q);
-            if (/^(dark|light)( mode| theme)?$/.test(q)) {
-                const mode = q.startsWith('dark') ? 'dark' : 'light';
-                yield { id: 'set-theme', title: 'Switch to ' + mode + ' mode', icon: mode === 'dark' ? 'bi-moon-stars' : 'bi-sun', action: () => this.store.setTheme(mode) };
-            }
             if (this.role === 'patient' && /^(book|see|appointment|i need|need)/.test(q)) {
                 const words = q.replace(/^(book|see|appointment with|appointment|i need|need)\s*(a|an|with)?\s*/, '');
                 for (const d of this.matchDoctors(words).slice(0, 3)) {
