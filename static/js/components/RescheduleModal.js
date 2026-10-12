@@ -2,42 +2,24 @@ window.RescheduleModal = {
     emits: ['rescheduled'],
     template: `
         <div class="modal fade" ref="modal" tabindex="-1">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-header bg-warning">
-                        <h5 class="modal-title">Reschedule Appointment</h5>
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title mb-0">Reschedule</h5>
+                            <div class="small text-muted">Currently with Dr. {{ appointment && appointment.doctor_name }} on {{ appointment && appointment.date }} at {{ appointment && appointment.time }}</div>
+                        </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body">
-                        <p class="mb-3 text-muted">
-                            Currently with Dr. {{ doctorName }} on {{ currentDate }} at {{ currentTime }}
-                        </p>
+                    <div class="modal-body pt-0">
                         <div class="alert alert-danger py-2" v-if="error">{{ error }}</div>
-                        <div v-if="availability.length" class="mb-3">
-                            <h6>Available slots</h6>
-                            <div v-for="slot in availability" :key="slot.id"
-                                 class="badge me-1 mb-1 p-2 slot-badge"
-                                 :class="form.date === slot.date && form.time === slot.start_time ? 'bg-primary' : 'bg-success'"
-                                 @click="pickSlot(slot)">
-                                {{ slot.date }} | {{ slot.start_time }} - {{ slot.end_time }}
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">New Date *</label>
-                                <input type="date" class="form-control" v-model="form.date" :min="store.todayStr" :max="store.weekLaterStr">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">New Time *</label>
-                                <input type="time" class="form-control" v-model="form.time">
-                            </div>
-                        </div>
+                        <slot-picker v-if="appointment" :doctor-id="appointment.doctor_id" v-model="pick" :active="open"></slot-picker>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-warning" @click="reschedule" :disabled="saving">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Keep current time</button>
+                        <button type="button" class="btn btn-warning" @click="reschedule" :disabled="saving || !pick.time">
                             <span v-if="saving" class="spinner-border spinner-border-sm me-1"></span>
-                            Reschedule
+                            Move to {{ pick.time ? pick.date.slice(5) + ' ' + pick.time : '...' }}
                         </button>
                     </div>
                 </div>
@@ -47,50 +29,39 @@ window.RescheduleModal = {
     data() {
         return {
             store: window.store,
-            form: { date: '', time: '' },
-            appointmentId: null,
-            doctorName: '',
-            currentDate: '',
-            currentTime: '',
-            availability: [],
+            pick: { date: '', time: '' },
+            appointment: null,
             error: '',
             saving: false,
+            open: false,
+            closing: false,
             bsModal: null
         };
     },
     mounted() {
         this.bsModal = new bootstrap.Modal(this.$refs.modal);
+        this.$refs.modal.addEventListener('hide.bs.modal', () => { this.closing = true; });
+        this.$refs.modal.addEventListener('hidden.bs.modal', () => { this.closing = false; this.open = false; this.appointment = null; });
     },
     methods: {
-        pickSlot(slot) {
-            this.form.date = slot.date;
-            this.form.time = slot.start_time;
-            this.error = '';
-        },
-        async show(appointment) {
-            this.appointmentId = appointment.id;
-            this.doctorName = appointment.doctor_name;
-            this.currentDate = appointment.date;
-            this.currentTime = appointment.time;
-            this.form = { date: '', time: '' };
-            this.error = '';
-            try {
-                this.availability = await this.store.api('/doctors/' + appointment.doctor_id + '/availability');
-            } catch (e) {
-                this.availability = [];
+        show(appointment) {
+            if (this.closing) {
+                this.$refs.modal.addEventListener('hidden.bs.modal', () => this.show(appointment), { once: true });
+                return;
             }
+            this.appointment = appointment;
+            this.pick = { date: '', time: '' };
+            this.error = '';
+            this.open = true;
             this.bsModal.show();
         },
         async reschedule() {
             this.error = '';
-            if (!this.form.date || !this.form.time) {
-                this.error = 'Please choose a new date and time';
-                return;
-            }
             this.saving = true;
             try {
-                await this.store.api('/appointments/' + this.appointmentId, 'PUT', this.form);
-                this.store.showAlert('Appointment rescheduled successfully');
+                const moved = await this.store.api('/appointments/' + this.appointment.id, 'PUT', this.pick);
+                this.store.showAlert('Moved to ' + moved.date + ' at ' + moved.time + ' (token ' + moved.token + ')');
+                this.store.pulse();
                 this.bsModal.hide();
                 this.$emit('rescheduled');
             } catch (e) {
