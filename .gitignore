@@ -1,0 +1,20 @@
+# python
+__pycache__/
+*.pyc
+venv/
+.venv/
+.pytest_cache/
+
+# local config
+.env
+
+# runtime data (created when the app runs)
+*.db
+*.sqlite3
+dump.rdb
+celerybeat-schedule*
+uploads/
+
+.DS_Store
+.vscode/
+.idea/
