@@ -7,70 +7,98 @@
 ![Redis](https://img.shields.io/badge/Redis-cache%20%2B%20broker-DC382D?logo=redis&logoColor=white)
 ![Celery](https://img.shields.io/badge/Celery-background%20jobs-37814A?logo=celery&logoColor=white)
 
-A full-stack hospital management app where **admins** manage doctors and patients, **doctors** publish their availability and record treatments, and **patients** find a doctor, book a slot and keep track of their medical history.
+A hospital app that follows a visit from **symptom to seat**. A patient taps where it hurts, books a free slot, gets a boarding-pass style ticket with a QR code, and watches their place in the queue live. On the day, the waiting-room TV flips their token up like an airport board when the doctor calls them in.
 
-This is version 2 of my Hospital Management System. The first version was a classic server-rendered Flask app. V2 rebuilds it as a **single-page app**: a Vue 3 frontend talking to a Flask REST API with JWT auth, Redis caching and Celery jobs for reminders, monthly reports and CSV exports.
+It has three roles. **Patients** book and track visits, **doctors** paint their weekly hours, run their queue and write prescriptions, and **admins** manage everyone. The frontend is a Vue 3 single-page app talking to a Flask REST API, with JWT auth, Redis caching and Celery jobs for reminders, monthly reports and CSV exports.
 
 <p align="center">
-  <img src="docs/screenshots/patient-dashboard.png" alt="Patient dashboard" width="900">
+  <img src="docs/demo/booking-flow.gif" alt="Booking from the body map to the boarding pass" width="880">
 </p>
 
-## Features
+## Highlights
 
-**Admin**
-- Dashboard with live counts of doctors, patients and appointments by status
-- Add, edit, deactivate and reactivate doctors
-- Search across doctors, patients and departments
-- View any patient's full treatment history and deactivate accounts
+| | |
+|---|---|
+| 🧍 **"Where does it hurt?"** | Patients tap a region on a body map and pick a symptom, and the app suggests the right department (knee → Orthopedics, chest pain → Cardiology, anything for a child → Pediatrics) and shows who's free. |
+| 🎫 **Boarding-pass tickets** | Every booking gets a token like `C-04`, a QR code and a gate (room). Tap the pass to flip it for prep notes. On the day it shows *"Now serving C-02 · 1 ahead of you · ~15 min"* and lights up when it's your turn. |
+| 📺 **Lobby "Now Serving" screen** | A full-screen board for the waiting-room TV at `/lobby`. When a doctor calls the next patient, the token appears full-screen and then flips into place split-flap style, with an optional chime and spoken announcement. No patient names are shown. |
+| 💓 **Heartbeat branding** | An ECG line runs under the navbar and spikes when something happens (a booking, a patient called). Loaders draw an ECG trace and the logo beats. |
+| 🗓️ **Paint your week** | Doctors drag across a weekly calendar grid to set their hours, with presets for weekdays and mornings. Patients see each doctor's week as a heatmap of free slots, and a slot booked by someone else while you're looking fades out as *just taken*. |
+| ℞ **Prescription pad** | Treatments are written on a letterhead pad. Signing draws the doctor's signature in handwriting, and patients can open any prescription and save it as a PDF. |
+| 🚇 **Health journey map** | A patient's history is a subway-style line with one station per visit, coloured by department. Tap a station to see the diagnosis and prescription. |
+| ⌨️ **Command palette + voice** | Press <kbd>Ctrl</kbd>+<kbd>K</kbd> and type (or say) things like *"book cardiology tomorrow at 2pm"*, *"cancel my next"*, *"call next"*, *"add slot friday 9-1"* or *"patient meera"*. |
+| ✨ **Small touches** | A time-of-day greeting (*"Good morning, Dr. Mehta, 6 patients today, first at 9:30"*), an auto/light/dark theme that follows the clock, count-up stats, toast notifications, page transitions, and confetti when a doctor finishes their last patient. All motion switches off for people who prefer reduced motion. |
 
-**Doctor**
-- See upcoming appointments and the list of their own patients
-- Open availability slots for the next 7 days (patients can only book inside them)
-- Complete an appointment by recording diagnosis, prescription, notes and next visit
-- Monthly activity report emailed on the 1st of every month
-
-**Patient**
-- Register, log in and manage their profile and password
-- Browse departments, search doctors and see their open slots
-- Book, reschedule and cancel appointments, with clash checks on both sides
-- Full treatment history with one-click **CSV export** (runs as a Celery job)
-- Morning reminder email on the day of an appointment
+<p align="center">
+  <img src="docs/demo/lobby-screen.gif" alt="Doctor calls the next patient and the lobby board flips" width="880">
+</p>
 
 ## Screenshots
 
-| Admin dashboard | Booking a slot |
+| Patient dashboard with live tickets | Where does it hurt? |
 |---|---|
-| ![Admin dashboard](docs/screenshots/admin-dashboard.png) | ![Booking](docs/screenshots/booking.png) |
-| **Doctor dashboard** | **Recording a treatment** |
-| ![Doctor dashboard](docs/screenshots/doctor-dashboard.png) | ![Treatment](docs/screenshots/treatment.png) |
-| **Treatment history + CSV export** | **Doctor availability** |
-| ![History](docs/screenshots/patient-history.png) | ![Availability](docs/screenshots/doctor-availability.png) |
+| ![Patient dashboard](docs/screenshots/patient-dashboard.png) | ![Body map](docs/screenshots/body-map.png) |
+| **Week heatmap and slot picker** | **A slot taken by someone else, live** |
+| ![Slot picker](docs/screenshots/slot-picker.png) | ![Just taken](docs/screenshots/just-taken.png) |
+| **Doctor's queue** | **End of the day** |
+| ![Doctor dashboard](docs/screenshots/doctor-dashboard.png) | ![Doctor done](docs/screenshots/doctor-done.png) |
+| **Writing a prescription** | **Paint your week** |
+| ![Prescription](docs/screenshots/rx-signing.png) | ![Paint week](docs/screenshots/paint-week.png) |
+| **Health journey** | **Command palette** |
+| ![Journey](docs/screenshots/journey.png) | ![Palette](docs/screenshots/palette.png) |
+| **Lobby screen** | **Admin, dark mode** |
+| ![Lobby](docs/screenshots/lobby.png) | ![Admin dark](docs/screenshots/admin-dark.png) |
 
 <details>
-<summary>Login and mobile view</summary>
+<summary>More: login, ticket back, booking confirmation, prescription view, mobile</summary>
 
 <p>
-  <img src="docs/screenshots/login.png" alt="Login" width="600">
-  <img src="docs/screenshots/mobile-dashboard.png" alt="Mobile" width="260">
+  <img src="docs/screenshots/login.png" alt="Login" width="640">
+  <img src="docs/screenshots/booked.png" alt="Booked" width="640">
+  <img src="docs/screenshots/rx-view.png" alt="Prescription view" width="640">
+  <img src="docs/screenshots/ticket-back.png" alt="Ticket back" width="480">
+  <img src="docs/screenshots/mobile-dashboard.png" alt="Mobile dashboard" width="240">
+  <img src="docs/screenshots/mobile-bodymap.png" alt="Mobile body map" width="240">
 </p>
 </details>
+
+## Everything each role can do
+
+**Patient**
+- Register, log in, edit their profile and change their password
+- Find a doctor from the body map or browse by department, with each doctor's next free slot shown on their card
+- Book, reschedule and cancel, with clash checks on both the doctor's and the patient's side
+- Live tickets with queue position and QR code, a health journey map, prescriptions as PDF, and a CSV export of their history (runs as a Celery job)
+- A reminder email on the morning of an appointment
+
+**Doctor**
+- A live queue for today: call the next patient (or a specific one), finish visits with a prescription, and see how much of the day is done
+- Paint availability for the next 7 days and see booked appointments on the same grid
+- Open the full history of any patient who has booked with them
+- A monthly activity report by email on the 1st of every month
+
+**Admin**
+- Dashboard with live counts and status breakdowns
+- Add, edit, deactivate and reactivate doctors (including their room)
+- Search doctors, patients and departments, open any patient's journey, and deactivate accounts
 
 ## Tech stack
 
 | Layer | Tools |
 |---|---|
-| Frontend | Vue 3 (CDN, no build step), Bootstrap 5, Bootstrap Icons |
+| Frontend | Vue 3 (CDN, no build step), Bootstrap 5, Bootstrap Icons, qrcodejs, canvas-confetti, Web Speech API |
 | Backend | Flask 3, Flask-SQLAlchemy, Flask-JWT-Extended, Flask-Caching, Flask-Mail |
 | Database | SQLite by default (any SQLAlchemy URL works through `DATABASE_URL`) |
 | Cache | Redis, with an automatic in-memory fallback when Redis isn't running |
 | Background jobs | Celery + Celery Beat with Redis as the broker |
-| Tests | pytest (43 tests), run on every push with GitHub Actions |
+| Tests | pytest (53 tests), run on every push with GitHub Actions |
 
 ## How it fits together
 
 ```mermaid
 flowchart LR
-    UI["Vue 3 SPA<br/>(static/js)"] -- "REST + JWT" --> API["Flask API<br/>(api.py)"]
+    UI["Vue 3 SPA<br/>(static/js)"] -- "REST + JWT" --> API["Flask API<br/>(api.py, api_live.py)"]
+    TV["Lobby screen<br/>(/lobby)"] -- "polls /api/lobby" --> API
     API --> DB[("SQLite<br/>SQLAlchemy")]
     API <--> C[("Redis<br/>cache")]
     API -- "export job" --> Q[("Redis<br/>broker")]
@@ -79,6 +107,8 @@ flowchart LR
     W --> DB
     W --> M["Email<br/>(Flask-Mail)"]
 ```
+
+The live parts (tickets, the doctor's queue, the slot picker and the lobby board) poll small JSON endpoints every few seconds, so they work without WebSockets.
 
 ## Getting started
 
@@ -91,17 +121,22 @@ python -m venv venv
 source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-python seed_demo.py               # optional: demo doctors, patients and appointments
-python app.py                     # http://localhost:5000
+python seed_demo.py               # demo doctors, patients, a live queue for today and past visits
+python app.py                     # http://localhost:5000  (lobby screen at /lobby)
 ```
 
-The database and the default admin account are created on first run.
+The database and the default admin account are created on first run. Older databases get the new columns added automatically.
 
 | Account | Username | Password |
 |---|---|---|
 | Admin | `admin` | `admin123` |
 | Doctors (demo data) | `dr.mehta`, `dr.sharma`, `dr.iyer`, `dr.khan`, `dr.gill`, `dr.nair` | `demo123` |
-| Patients (demo data) | `rahul`, `sneha`, `amit`, `priya` | `demo123` |
+| Patients (demo data) | `rahul`, `sneha`, `amit`, `priya`, `kiran`, `meera`, `vikram`, `ananya` | `demo123` |
+
+**Try this:**
+1. Open `/lobby` in one window.
+2. Log in as `dr.mehta` in another window and press **Call next patient**. The board flips.
+3. Log in as `rahul` to see his ticket update to *"It's your turn"*.
 
 ### With Redis and Celery
 
@@ -126,11 +161,20 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-The tests cover login and registration, booking rules (availability, double booking, past dates, rescheduling), role permissions for every endpoint, cache invalidation and the background tasks. They use an in-memory database and never touch your real Redis.
+The tests cover:
+- login and registration
+- booking rules (availability, double booking, past dates, rescheduling)
+- queue tokens and calling patients in
+- the lobby feed (including that it never exposes patient names)
+- free-slot and weekly availability endpoints
+- role permissions for every endpoint
+- cache invalidation and the background tasks
+
+They use an in-memory database and never touch your real Redis.
 
 ## API overview
 
-All routes are under `/api` and, apart from login and register, need an `Authorization: Bearer <token>` header.
+All routes are under `/api`. Apart from login, register and the lobby feed, they need an `Authorization: Bearer <token>` header.
 
 | Method | Route | Who |
 |---|---|---|
@@ -141,11 +185,16 @@ All routes are under `/api` and, apart from login and register, need an `Authori
 | GET | `/doctors?search=&department_id=` | logged in |
 | POST, PUT, DELETE | `/doctors`, `/doctors/<id>` | admin |
 | GET | `/doctors/<id>/availability` | logged in |
+| GET | `/doctors/<id>/slots` | logged in (free 30-minute slots for the next week) |
 | POST, DELETE | `/doctors/<id>/availability[/<slot_id>]` | that doctor or admin |
+| PUT | `/doctors/<id>/availability/week` | that doctor or admin (replace whole days) |
 | GET | `/patients` | admin, or a doctor (only their own patients) |
 | GET | `/patients/<id>`, `/patients/<id>/history` | that patient, their doctor, or admin |
 | GET, POST | `/appointments` | patients see and book their own, doctors see theirs |
 | PUT | `/appointments/<id>`, `/appointments/<id>/cancel` | people involved in the appointment, or admin |
+| GET | `/appointments/<id>/queue` | people involved (live place in line) |
+| POST | `/queue/next` | doctor (call the next patient, or a specific one) |
+| GET | `/lobby` | anyone (tokens and rooms only, no names) |
 | POST | `/appointments/<id>/treatment` | the appointment's doctor or admin |
 | POST | `/patients/<id>/export` | that patient, their doctor, or admin |
 | GET | `/tasks/<task_id>`, `/download/<filename>` | whoever is allowed to see that export |
@@ -155,25 +204,29 @@ All routes are under `/api` and, apart from login and register, need an `Authori
 
 ```
 HMSV2/
-├── app.py              # app factory, error handlers, first-run seeding
+├── app.py              # app factory, error handlers, schema upgrades, /lobby page
 ├── api.py              # REST endpoints, validation and permission checks
+├── api_live.py         # queue tokens, call-next, lobby feed, slots, weekly availability
 ├── models.py           # SQLAlchemy models
 ├── config.py           # settings, all overridable from .env
 ├── extensions.py       # cache, JWT and mail instances
 ├── exports.py          # CSV export shared by the API and Celery
 ├── celery_worker.py    # Celery app + beat schedule
 ├── tasks.py            # reminders, monthly reports, CSV export job
-├── seed_demo.py        # demo data
-├── templates/index.html
+├── seed_demo.py        # demo data, including a live queue for today
+├── templates/
+│   ├── index.html      # the SPA shell
+│   └── lobby.html      # the waiting-room screen
 ├── static/
-│   ├── css/style.css
+│   ├── css/style.css   # design tokens, dark mode, animations
 │   └── js/
-│       ├── store.js    # shared state + API helper
+│       ├── store.js    # shared state, API helper, toasts, theme
 │       ├── app.js      # root component and routing
-│       └── components/ # dashboards, lists, modals
+│       └── components/ # body map, boarding pass, slot picker, palette, Rx pad, journey...
 ├── tests/              # pytest suite
 └── docs/
     ├── project-report.pdf
+    ├── demo/           # GIFs
     └── screenshots/
 ```
 
