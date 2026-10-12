@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Now Serving | HMS Lobby</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏥</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #05070d;
+            --panel: #0d1220;
+            --line: #1c2438;
+            --text: #e8ecf5;
+            --muted: #7d8aa8;
+            --amber: #fbbf24;
+            --pulse: #fb7185;
+            --green: #34d399;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; overflow: hidden; }
+
+        header {
+            display: flex; align-items: center; gap: 1.2rem;
+            padding: 1.4vh 3vw; border-bottom: 1px solid var(--line);
+            background: linear-gradient(180deg, #0b1020, var(--bg));
+        }
+        .brand { display: flex; align-items: center; gap: 0.7rem; font-weight: 800; font-size: clamp(1.2rem, 2.2vw, 2rem); letter-spacing: -0.02em; }
+        .brand .heart { color: var(--pulse); animation: beat 1.6s ease-in-out infinite; }
+        .title { color: var(--amber); font-weight: 800; letter-spacing: 0.3em; font-size: clamp(0.9rem, 1.4vw, 1.3rem); }
+        .clock { margin-left: auto; text-align: right; }
+        .clock .time { font-family: 'JetBrains Mono', monospace; font-size: clamp(1.4rem, 3vw, 2.8rem); }
+        .clock .date { color: var(--muted); font-size: clamp(0.7rem, 1vw, 1rem); }
+
+        .head-ecg { height: 5vh; width: 100%; display: block; }
+        .head-ecg path { fill: none; stroke: var(--pulse); stroke-width: 2; stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: draw 3s linear infinite; }
+
+        main { padding: 1vh 3vw; height: calc(100% - 22vh); display: flex; flex-direction: column; }
+        .cols, .row {
+            display: grid;
+            grid-template-columns: 1.1fr 2.2fr 1.6fr 2fr 2.2fr;
+            gap: 1.5vw;
+            align-items: center;
+        }
+        .cols { color: var(--muted); font-size: clamp(0.65rem, 0.95vw, 0.95rem); letter-spacing: 0.15em; text-transform: uppercase; padding: 1vh 1.2vw; }
+        .rows { display: flex; flex-direction: column; gap: 1.1vh; overflow: hidden; flex: 1; }
+        .row {
+            background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+            padding: 1.4vh 1.2vw; font-size: clamp(0.9rem, 1.5vw, 1.6rem);
+            animation: row-in 0.6s cubic-bezier(.22,1,.36,1) both;
+        }
+        .row.just-called { border-color: var(--amber); box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.25), 0 0 40px rgba(251, 191, 36, 0.15); }
+        .room { font-weight: 800; color: var(--amber); }
+        .doctor { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dept { color: var(--muted); font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .next { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 0.85em; }
+        .next b { color: var(--text); font-weight: 700; margin-right: 0.6em; }
+
+        /* split-flap cells */
+        .flaps { display: flex; gap: 0.25em; }
+        .flap {
+            position: relative; width: 1.25em; height: 1.6em;
+            background: linear-gradient(180deg, #1a2133 0%, #1a2133 49%, #0a0e18 50%, #141a29 51%, #141a29 100%);
+            border-radius: 6px; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #fff;
+            font-size: 1.15em; perspective: 300px;
+        }
+        .flap::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(0,0,0,0.75); }
+        .flap.turn { animation: flip 0.07s linear; }
+        .empty-board { color: var(--muted); text-align: center; margin-top: 18vh; font-size: clamp(1rem, 2vw, 2rem); }
+
+        footer {
+            position: fixed; left: 0; right: 0; bottom: 0; height: 6vh;
+            background: var(--amber); color: #111; display: flex; align-items: center; overflow: hidden;
+            font-weight: 600; font-size: clamp(0.8rem, 1.3vw, 1.3rem);
+        }
+        .ticker { white-space: nowrap; animation: ticker 40s linear infinite; padding-left: 100%; }
+        .ticker span { margin-right: 4rem; }
+
+        .sound {
+            position: fixed; right: 2vw; bottom: 8vh; background: var(--panel); color: var(--text);
+            border: 1px solid var(--line); border-radius: 999px; padding: 0.6rem 1rem; cursor: pointer; font: inherit;
+        }
+        .sound.on { color: var(--green); border-color: var(--green); }
+
+        .callout {
+            position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+            background: rgba(5, 7, 13, 0.82); backdrop-filter: blur(6px); z-index: 10;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s;
+        }
+        .callout.show { opacity: 1; }
+        .callout .box { text-align: center; animation: zoom 0.6s cubic-bezier(.22,1,.36,1); }
+        .callout .tok { font-family: 'JetBrains Mono', monospace; font-size: clamp(4rem, 14vw, 13rem); color: var(--amber); line-height: 1; }
+        .callout .to { font-size: clamp(1.2rem, 3vw, 3rem); margin-top: 1rem; }
+        .callout .to b { color: var(--amber); }
+
+        @keyframes flip { 0% { transform: rotateX(0); } 50% { transform: rotateX(-90deg); } 100% { transform: rotateX(0); } }
+        @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+        @keyframes row-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+        @keyframes beat { 0%, 40%, 100% { transform: scale(1); } 15% { transform: scale(1.2); } 25% { transform: scale(0.95); } }
+        @keyframes draw { 0% { stroke-dashoffset: 1000; opacity: 1; } 80% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+        @keyframes zoom { from { transform: scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand"><i class="bi bi-heart-pulse-fill heart"></i> HMS</div>
+        <div class="title">NOW SERVING</div>
+        <div class="clock"><div class="time" id="time">--:--</div><div class="date" id="date"></div></div>
+    </header>
+    <svg class="head-ecg" viewBox="0 0 600 60" preserveAspectRatio="none" aria-hidden="true"><path id="ecg" pathLength="1000"></path></svg>
+
+    <main>
+        <div class="cols"><span>Room</span><span>Doctor</span><span>Department</span><span>Now serving</span><span>Up next</span></div>
+        <div class="rows" id="rows"></div>
+    </main>
+
+    <button class="sound" id="sound"><i class="bi bi-volume-mute"></i> Tap to enable sound</button>
+    <div class="callout" id="callout"><div class="box"><div class="tok" id="calloutTok"></div><div class="to" id="calloutTo"></div></div></div>
+
+    <footer><div class="ticker">
+        <span><i class="bi bi-ticket-perforated"></i> Please keep your token ready</span>
+        <span><i class="bi bi-phone"></i> Follow your place in the queue live on the HMS app</span>
+        <span><i class="bi bi-clock"></i> Arrive 10 minutes before your appointment</span>
+        <span><i class="bi bi-heart-pulse"></i> In an emergency, go straight to the Emergency desk</span>
+        <span><i class="bi bi-droplet"></i> Free drinking water near the reception</span>
+    </div></footer>
+
+    <script>
+        const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-';
+        const TOKEN_LEN = 4;
+        const CALLOUT_MS = 4500;
+        const rowsEl = document.getElementById('rows');
+        const seen = {};          // room -> last token shown
+        let soundOn = false;
+        let first = true;
+
+        // header heartbeat
+        (function () {
+            let d = 'M0,30';
+            for (let i = 0; i < 6; i++) {
+                const x = i * 100;
+                d += ` L${x + 30},30 L${x + 36},24 L${x + 42},30 L${x + 52},30 L${x + 56},36 L${x + 61},4 L${x + 66},54 L${x + 70},30 L${x + 80},30 L${x + 88},21 L${x + 96},30 L${x + 100},30`;
+            }
+            document.getElementById('ecg').setAttribute('d', d);
+        })();
+
+        function tickClock() {
+            const now = new Date();
+            document.getElementById('time').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('date').textContent = now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+        }
+        tickClock();
+        setInterval(tickClock, 10000);
+
+        function makeFlaps(text) {
+            const wrap = document.createElement('div');
+            wrap.className = 'flaps';
+            for (let i = 0; i < TOKEN_LEN; i++) {
+                const cell = document.createElement('span');
+                cell.className = 'flap';
+                cell.textContent = (text || '').padEnd(TOKEN_LEN)[i];
+                wrap.appendChild(cell);
+            }
+            return wrap;
+        }
+
+        // Spin each changed character through a few letters before landing, like an airport board
+        function flapTo(wrap, text) {
+            const target = (text || '').padEnd(TOKEN_LEN);
+            [...wrap.children].forEach((cell, i) => {
+                if (cell.textContent === target[i]) return;
+                let spins = 6 + i * 3;
+                const step = () => {
+                    cell.classList.remove('turn');
+                    void cell.offsetWidth;
+                    cell.classList.add('turn');
+                    cell.textContent = spins-- > 0 ? CHARS[Math.floor(Math.random() * CHARS.length)] : target[i];
+                    if (spins >= 0) setTimeout(step, 70);
+                };
+                step();
+            });
+        }
+
+        function chime() {
+            if (!soundOn) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                [[880, 0], [660, 0.35]].forEach(([freq, at]) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.frequency.value = freq;
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.0001, ctx.currentTime + at);
+                    gain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + at + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + at + 0.9);
+                    osc.connect(gain).connect(ctx.destination);
+                    osc.start(ctx.currentTime + at);
+                    osc.stop(ctx.currentTime + at + 1);
+                });
+            } catch (e) { /* no audio available */ }
+        }
+
+        function announce(board) {
+            const callout = document.getElementById('callout');
+            document.getElementById('calloutTok').textContent = board.now_serving;
+            document.getElementById('calloutTo').innerHTML = 'please go to <b>' + board.room + '</b> &middot; Dr. ' + board.doctor;
+            callout.classList.add('show');
+            setTimeout(() => callout.classList.remove('show'), CALLOUT_MS);
+            chime();
+            if (soundOn && 'speechSynthesis' in window) {
+                const spoken = board.now_serving.split('').map(c => c === '-' ? ' ' : c).join(' ');
+                const u = new SpeechSynthesisUtterance(`Token ${spoken}, please go to ${board.room}`);
+                u.rate = 0.9;
+                setTimeout(() => speechSynthesis.speak(u), 900);
+            }
+        }
+
+        function render(data) {
+            if (!data.boards.length) {
+                rowsEl.innerHTML = '<div class="empty-board"><i class="bi bi-cup-hot"></i><br>No clinics running right now.</div>';
+                return;
+            }
+            const existing = {};
+            rowsEl.querySelectorAll('.row').forEach(r => existing[r.dataset.room] = r);
+            const announcements = [];
+
+            data.boards.forEach((b, index) => {
+                let row = existing[b.room];
+                if (!row) {
+                    row = document.createElement('div');
+                    row.className = 'row';
+                    row.dataset.room = b.room;
+                    row.style.animationDelay = (index * 0.07) + 's';
+                    row.innerHTML = `<span class="room"></span><span class="doctor"></span><span class="dept"></span><span class="serving"></span><span class="next"></span>`;
+                    row.querySelector('.serving').appendChild(makeFlaps(b.now_serving || '--'));
+                }
+                rowsEl.appendChild(row);   // keeps the server's order
+                row.querySelector('.room').textContent = b.room;
+                row.querySelector('.doctor').textContent = 'Dr. ' + b.doctor;
+                row.querySelector('.dept').textContent = b.department;
+                row.querySelector('.next').innerHTML = b.up_next.length
+                    ? b.up_next.map(t => '<b>' + t + '</b>').join('') + (b.waiting > b.up_next.length ? '+' + (b.waiting - b.up_next.length) : '')
+                    : '<span>-</span>';
+
+                const shown = b.now_serving || '--';
+                if (seen[b.room] !== undefined && seen[b.room] !== shown && b.now_serving) {
+                    // Show the big callout first, then flip the board as it fades out
+                    const flaps = row.querySelector('.flaps');
+                    const flip = () => {
+                        flapTo(flaps, shown);
+                        row.classList.add('just-called');
+                        setTimeout(() => row.classList.remove('just-called'), 8000);
+                    };
+                    if (!first && !announcements.length) {
+                        announcements.push(b);
+                        setTimeout(flip, CALLOUT_MS - 400);
+                    } else {
+                        flip();
+                    }
+                } else if (seen[b.room] === undefined) {
+                    flapTo(row.querySelector('.flaps'), shown);
+                }
+                seen[b.room] = shown;
+                delete existing[b.room];
+            });
+            Object.values(existing).forEach(r => r.remove());
+            announcements.slice(0, 1).forEach(announce);
+            first = false;
+        }
+
+        async function poll() {
+            try {
+                const res = await fetch('/api/lobby');
+                if (res.ok) render(await res.json());
+            } catch (e) { /* try again next tick */ }
+        }
+
+        document.getElementById('sound').addEventListener('click', e => {
+            soundOn = !soundOn;
+            e.currentTarget.classList.toggle('on', soundOn);
+            e.currentTarget.innerHTML = soundOn ? '<i class="bi bi-volume-up"></i> Sound on' : '<i class="bi bi-volume-mute"></i> Tap to enable sound';
+            if (soundOn) chime();
+        });
+
+        poll();
+        setInterval(poll, 4000);
+    </script>
+</body>
+</html>

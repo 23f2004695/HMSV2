@@ -40,9 +40,15 @@ window.DoctorModal = {
                                 <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Specialization</label>
-                            <input type="text" class="form-control" v-model="form.specialization">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">Specialization</label>
+                                <input type="text" class="form-control" v-model="form.specialization">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Room</label>
+                                <input type="text" class="form-control" v-model="form.room" placeholder="e.g. Room 12" maxlength="20">
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Qualification</label>
@@ -89,7 +95,7 @@ window.DoctorModal = {
         getEmptyForm() {
             return {
                 id: null, username: '', name: '', email: '', password: '', phone: '',
-                department_id: '', specialization: '', qualification: '',
+                department_id: '', specialization: '', qualification: '', room: '',
                 experience_years: 0, consultation_fee: 0, bio: ''
             };
         },
@@ -114,7 +120,7 @@ window.DoctorModal = {
             const payload = {
                 name: f.name, email: f.email, phone: f.phone,
                 department_id: f.department_id || null,
-                specialization: f.specialization, qualification: f.qualification,
+                specialization: f.specialization, qualification: f.qualification, room: f.room,
                 experience_years: f.experience_years, consultation_fee: f.consultation_fee, bio: f.bio
             };
             if (!f.id) Object.assign(payload, { username: f.username, password: f.password });

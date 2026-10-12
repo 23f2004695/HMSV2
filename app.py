@@ -36,6 +36,11 @@ def create_app(config_class=Config):
     def index():
         return render_template('index.html')
 
+    @app.route('/lobby')
+    def lobby_screen():
+        # Full-screen "Now Serving" board for a TV in the waiting room
+        return render_template('lobby.html')
+
     with app.app_context():
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
         db.create_all()
