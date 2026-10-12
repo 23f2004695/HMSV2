@@ -23,10 +23,15 @@ const store = reactive({
     //Navigation
     currentPage: 'dashboard',
 
-    // Alert System
-    alertMessage: '',
-    alertType: 'success',
-    _alertTimer: null,
+    // Toasts (store.showAlert keeps its old signature)
+    toasts: [],
+    _toastId: 0,
+
+    // Bumped to make the header heartbeat spike, e.g. after a booking
+    pulseKey: 0,
+
+    // 'auto' follows the time of day, otherwise 'light' or 'dark'
+    themePref: (() => { try { return localStorage.getItem('hms_theme') || 'auto'; } catch (e) { return 'auto'; } })(),
 
     //Shared Data
     departments: [],
@@ -115,12 +120,73 @@ const store = reactive({
         window.scrollTo(0, 0);
     },
 
-    //Alert
+    //Toasts
     showAlert(message, type = 'success') {
-        store.alertMessage = message;
-        store.alertType = type;
-        if (store._alertTimer) clearTimeout(store._alertTimer);
-        store._alertTimer = setTimeout(() => { store.alertMessage = ''; }, 5000);
+        const id = ++store._toastId;
+        store.toasts.push({ id, message, type });
+        if (store.toasts.length > 4) store.toasts.shift();
+        setTimeout(() => store.dismissToast(id), 5000);
+    },
+
+    dismissToast(id) {
+        store.toasts = store.toasts.filter(t => t.id !== id);
+    },
+
+    pulse() {
+        store.pulseKey++;
+    },
+
+    celebrate() {
+        if (!window.confetti || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const colors = ['#2563eb', '#e11d48', '#10b981', '#f59e0b', '#7c3aed'];
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.65 }, colors });
+        setTimeout(() => confetti({ particleCount: 60, angle: 60, spread: 60, origin: { x: 0 }, colors }), 250);
+        setTimeout(() => confetti({ particleCount: 60, angle: 120, spread: 60, origin: { x: 1 }, colors }), 400);
+    },
+
+    //Theme & time of day
+    timeOfDay(date = new Date()) {
+        const h = date.getHours();
+        if (h >= 5 && h < 12) return 'morning';
+        if (h >= 12 && h < 17) return 'afternoon';
+        if (h >= 17 && h < 20) return 'evening';
+        return 'night';
+    },
+
+    get effectiveTheme() {
+        if (store.themePref !== 'auto') return store.themePref;
+        const night = store.timeOfDay() === 'night';
+        const osDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        return night || osDark ? 'dark' : 'light';
+    },
+
+    applyTheme() {
+        document.documentElement.setAttribute('data-bs-theme', store.effectiveTheme);
+        document.body.classList.remove('tod-morning', 'tod-afternoon', 'tod-evening', 'tod-night');
+        document.body.classList.add('tod-' + store.timeOfDay());
+    },
+
+    cycleTheme() {
+        const order = ['auto', 'light', 'dark'];
+        store.setTheme(order[(order.indexOf(store.themePref) + 1) % order.length]);
+    },
+
+    setTheme(mode) {
+        store.themePref = mode;
+        try { localStorage.setItem('hms_theme', mode); } catch (e) { /* private mode */ }
+        store.applyTheme();
+        store.showAlert('Theme: ' + mode + (mode === 'auto' ? ' (follows the time of day)' : ''), 'info');
+    },
+
+    //Avatars
+    initials(name) {
+        return (name || '?').split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+    },
+
+    avatarColor(name) {
+        let hash = 0;
+        for (const ch of name || '') hash = (hash * 31 + ch.charCodeAt(0)) % 360;
+        return `hsl(${hash}, 62%, 48%)`;
     },
 
     //Data Loaders

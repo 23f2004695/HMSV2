@@ -1,11 +1,10 @@
 window.LoginForm = {
     emits: ['switch-to-register'],
     template: `
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white text-center">
-                <h4 class="mb-0">Login</h4>
-            </div>
-            <div class="card-body p-4">
+        <div class="card">
+            <div class="card-body p-4 p-md-5">
+                <h3 class="fw-bold mb-1">Welcome back</h3>
+                <p class="text-muted mb-4">Log in as a patient, doctor or admin.</p>
                 <div class="alert alert-danger" v-if="error">{{ error }}</div>
                 <div class="mb-3">
                     <label class="form-label">Username</label>
@@ -15,7 +14,7 @@ window.LoginForm = {
                     <label class="form-label">Password</label>
                     <input type="password" class="form-control" v-model="form.password" @keyup.enter="login" required>
                 </div>
-                <button class="btn btn-primary w-100" @click="login" :disabled="loading">
+                <button class="btn btn-primary btn-lg w-100" @click="login" :disabled="loading">
                     <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
                     Login
                 </button>

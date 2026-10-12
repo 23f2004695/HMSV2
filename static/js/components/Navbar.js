@@ -1,55 +1,86 @@
 window.AppNavbar = {
+    emits: ['open-palette'],
     template: `
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary" v-if="store.isLoggedIn">
+        <nav class="navbar navbar-expand-lg hms-navbar" v-if="store.isLoggedIn">
             <div class="container-fluid">
                 <a class="navbar-brand" href="#" @click.prevent="store.navigate('dashboard')">
-                    <i class="bi bi-hospital"></i> HMS
+                    <span class="brand-heart"><i class="bi bi-heart-pulse-fill"></i></span> HMS
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Menu">
+                    <i class="bi bi-list fs-3"></i>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav" ref="menu" @click="closeMenu">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" :class="{active: store.currentPage === 'dashboard'}" href="#" @click.prevent="store.navigate('dashboard')">Dashboard</a>
-                        </li>
-                        <li class="nav-item" v-if="store.user.role === 'admin'">
-                            <a class="nav-link" :class="{active: store.currentPage === 'doctors'}" href="#" @click.prevent="store.navigate('doctors')">Doctors</a>
-                        </li>
-                        <li class="nav-item" v-if="store.user.role === 'admin'">
-                            <a class="nav-link" :class="{active: store.currentPage === 'patients'}" href="#" @click.prevent="store.navigate('patients')">Patients</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" :class="{active: store.currentPage === 'appointments'}" href="#" @click.prevent="store.navigate('appointments')">Appointments</a>
-                        </li>
-                        <li class="nav-item" v-if="store.user.role === 'patient'">
-                            <a class="nav-link" :class="{active: store.currentPage === 'find-doctor'}" href="#" @click.prevent="store.navigate('find-doctor')">Find Doctor</a>
-                        </li>
-                        <li class="nav-item" v-if="store.user.role === 'doctor'">
-                            <a class="nav-link" :class="{active: store.currentPage === 'availability'}" href="#" @click.prevent="store.navigate('availability')">My Availability</a>
-                        </li>
-                        <li class="nav-item" v-if="store.user.role === 'patient'">
-                            <a class="nav-link" :class="{active: store.currentPage === 'my-history'}" href="#" @click.prevent="store.navigate('my-history')">My History</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" @click.prevent="store.navigate('profile')">
-                                <i class="bi bi-person-circle"></i> {{ store.user.name }}
+                    <ul class="navbar-nav me-auto gap-lg-1">
+                        <li class="nav-item" v-for="link in links" :key="link.page">
+                            <a class="nav-link" :class="{ active: store.currentPage === link.page }" href="#" @click.prevent="store.navigate(link.page)">
+                                <i class="bi me-1" :class="link.icon"></i>{{ link.label }}
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#" @click.prevent="store.logout()">
-                                <i class="bi bi-box-arrow-right"></i> Logout
+                            <a class="nav-link" href="/lobby" target="_blank" rel="noopener" title="Open the waiting-room screen">
+                                <i class="bi bi-tv me-1"></i>Lobby screen
                             </a>
                         </li>
                     </ul>
+                    <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+                        <button class="btn btn-sm btn-outline-secondary d-none d-lg-inline-flex align-items-center gap-2" @click="$emit('open-palette')">
+                            <i class="bi bi-search"></i> Search or type a command <span class="kbd-hint">Ctrl K</span>
+                        </button>
+                        <button class="theme-toggle" @click="store.cycleTheme()" :title="'Theme: ' + store.themePref">
+                            <i class="bi" :class="themeIcon"></i>
+                        </button>
+                        <div class="dropdown">
+                            <a href="#" class="d-flex align-items-center gap-2 text-decoration-none" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="avatar" style="width:36px;height:36px;font-size:0.8rem" :style="{ background: store.avatarColor(store.user.name) }">{{ store.initials(store.user.name) }}</span>
+                                <span class="d-lg-none d-xl-inline text-body small fw-semibold">{{ store.user.name }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow">
+                                <li class="px-3 py-2 small text-muted text-capitalize">{{ store.user.role }}</li>
+                                <li><a class="dropdown-item" href="#" @click.prevent="store.navigate('profile')"><i class="bi bi-person me-2"></i>Profile</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" @click.prevent="store.logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
+            <div class="nav-ecg"><ecg-line :beats="6" :height="18" :spike="spiking"></ecg-line></div>
         </nav>
     `,
     setup() {
         return { store: window.store };
+    },
+    data() {
+        return { spiking: false };
+    },
+    watch: {
+        // A booking (or similar) makes the heartbeat spike for a few seconds
+        'store.pulseKey'() {
+            this.spiking = false;
+            this.$nextTick(() => {
+                this.spiking = true;
+                clearTimeout(this._spikeTimer);
+                this._spikeTimer = setTimeout(() => { this.spiking = false; }, 2700);
+            });
+        }
+    },
+    computed: {
+        links() {
+            const role = this.store.user.role;
+            const all = [
+                { page: 'dashboard', label: 'Dashboard', icon: 'bi-grid-1x2', roles: ['admin', 'doctor', 'patient'] },
+                { page: 'doctors', label: 'Doctors', icon: 'bi-person-badge', roles: ['admin'] },
+                { page: 'patients', label: 'Patients', icon: 'bi-people', roles: ['admin'] },
+                { page: 'appointments', label: 'Appointments', icon: 'bi-calendar3', roles: ['admin', 'doctor', 'patient'] },
+                { page: 'find-doctor', label: 'Book', icon: 'bi-plus-circle', roles: ['patient'] },
+                { page: 'availability', label: 'My Week', icon: 'bi-calendar-week', roles: ['doctor'] },
+                { page: 'my-history', label: 'My Journey', icon: 'bi-signpost-split', roles: ['patient'] }
+            ];
+            return all.filter(l => l.roles.includes(role));
+        },
+        themeIcon() {
+            return { auto: 'bi-circle-half', light: 'bi-sun', dark: 'bi-moon-stars' }[this.store.themePref];
+        }
     },
     methods: {
         // On phones the menu stays open after picking a page unless we close it

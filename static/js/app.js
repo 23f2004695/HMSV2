@@ -8,6 +8,9 @@ const app = createApp({
         const viewHistoryPatientId = ref(null);
 
         onMounted(() => {
+            s.applyTheme();
+            // Re-check every few minutes so 'auto' theme and the greeting follow the clock
+            setInterval(() => s.applyTheme(), 5 * 60 * 1000);
             if (s.isLoggedIn) {
                 loadInitialData();
             }
@@ -55,82 +58,118 @@ const app = createApp({
     },
     template: `
         <!-- Navbar Component -->
-        <app-navbar></app-navbar>
+        <app-navbar @open-palette="$refs.palette.show()"></app-navbar>
+
+        <!-- Ctrl/Cmd + K -->
+        <command-palette ref="palette" v-if="store.isLoggedIn"
+            @book="(doctor, pick) => $refs.bookingModal.show(doctor, pick)"
+            @view-history="handleViewHistory">
+        </command-palette>
+
+        <!-- Toasts (all roles, and on the login screen) -->
+        <toast-stack></toast-stack>
 
         <!-- Auth Pages (not logged in) -->
-        <div v-if="!store.isLoggedIn" class="container mt-5">
-            <div class="row justify-content-center">
-                <div class="col-md-5">
-                    <div class="text-center mb-4">
-                        <h2 class="text-primary"><i class="bi bi-hospital"></i> Hospital Management System</h2>
-                        <p class="text-muted">Manage patients, doctors, and appointments efficiently</p>
+        <div v-if="!store.isLoggedIn" class="auth-shell">
+            <div class="auth-art">
+                <span class="orb" style="width:320px;height:320px;background:#60a5fa;top:-60px;left:-80px"></span>
+                <span class="orb" style="width:260px;height:260px;background:#f472b6;bottom:-60px;right:-40px;animation-delay:-5s"></span>
+                <div class="position-relative">
+                    <div class="d-flex align-items-center gap-2 mb-4 fs-5 fw-bold">
+                        <span class="brand-heart" style="background:rgba(255,255,255,0.2);color:#fff"><i class="bi bi-heart-pulse-fill"></i></span> HMS
                     </div>
-                    <login-form    v-if="authMode === 'login'"    @switch-to-register="authMode = 'register'"></login-form>
-                    <register-form v-if="authMode === 'register'" @switch-to-login="authMode = 'login'"></register-form>
+                    <h1>Care that runs<br>on time.</h1>
+                    <p class="mt-3">Book a doctor in seconds, follow your place in the queue live, and keep every prescription in one place.</p>
+                    <div class="d-flex flex-wrap gap-3 mt-4 small">
+                        <span><i class="bi bi-person-arms-up me-1"></i> Tap where it hurts</span>
+                        <span><i class="bi bi-ticket-perforated me-1"></i> Live queue tickets</span>
+                        <span><i class="bi bi-tv me-1"></i> Lobby screen</span>
+                    </div>
                 </div>
+                <ecg-line class="auth-ecg" :beats="4" :height="90"></ecg-line>
+            </div>
+            <div class="auth-form">
+                <transition name="page" mode="out-in">
+                    <login-form    v-if="authMode === 'login'"    key="login"    @switch-to-register="authMode = 'register'"></login-form>
+                    <register-form v-else                          key="register" @switch-to-login="authMode = 'login'"></register-form>
+                </transition>
             </div>
         </div>
 
         <!-- Main Content -->
-        <div v-if="store.isLoggedIn" class="container-fluid mt-3">
-            <!-- Global Alert Component -->
-            <alert-message></alert-message>
+        <div v-if="store.isLoggedIn" class="container-fluid py-4 px-lg-4">
+            <transition name="page" mode="out-in">
+                <div :key="store.currentPage + ':' + viewHistoryPatientId">
+                    <!-- Role-Based Dashboards -->
+                    <admin-dashboard   v-if="store.currentPage === 'dashboard' && store.user.role === 'admin'"></admin-dashboard>
 
-            <!-- Role-Based Dashboards -->
-            <admin-dashboard   v-if="store.currentPage === 'dashboard' && store.user.role === 'admin'"></admin-dashboard>
+                    <doctor-dashboard  v-if="store.currentPage === 'dashboard' && store.user.role === 'doctor'"
+                        @open-treatment="$refs.treatmentModal.show($event)"
+                        @view-history="handleViewHistory">
+                    </doctor-dashboard>
 
-            <doctor-dashboard  v-if="store.currentPage === 'dashboard' && store.user.role === 'doctor'"
-                @open-treatment="$refs.treatmentModal.show($event)"
-                @view-history="handleViewHistory">
-            </doctor-dashboard>
+                    <patient-dashboard v-if="store.currentPage === 'dashboard' && store.user.role === 'patient'"
+                        @find-doctor-dept="handleFindDoctorDept"
+                        @reschedule="$refs.rescheduleModal.show($event)">
+                    </patient-dashboard>
 
-            <patient-dashboard v-if="store.currentPage === 'dashboard' && store.user.role === 'patient'"
-                @find-doctor-dept="handleFindDoctorDept"
-                @reschedule="$refs.rescheduleModal.show($event)">
-            </patient-dashboard>
+                    <!-- Page Components -->
+                    <doctors-list      v-if="store.currentPage === 'doctors'"></doctors-list>
 
-            <!-- Page Components -->
-            <doctors-list      v-if="store.currentPage === 'doctors'"></doctors-list>
+                    <patients-list     v-if="store.currentPage === 'patients'"
+                        @view-history="handleViewHistory">
+                    </patients-list>
 
-            <patients-list     v-if="store.currentPage === 'patients'"
-                @view-history="handleViewHistory">
-            </patients-list>
+                    <appointments-list v-if="store.currentPage === 'appointments'"
+                        @open-treatment="$refs.treatmentModal.show($event)"
+                        @view-treatment="$refs.treatmentModal.show($event, true)"
+                        @reschedule="$refs.rescheduleModal.show($event)"
+                        @view-ticket="$refs.ticketModal.show($event)">
+                    </appointments-list>
 
-            <appointments-list v-if="store.currentPage === 'appointments'"
-                @open-treatment="$refs.treatmentModal.show($event)"
-                @view-treatment="$refs.treatmentModal.show($event, true)"
-                @reschedule="$refs.rescheduleModal.show($event)">
-            </appointments-list>
+                    <find-doctor       v-if="store.currentPage === 'find-doctor'"
+                        :initial-dept-id="findDoctorDeptId"
+                        @book-doctor="$refs.bookingModal.show($event)"
+                        @view-availability="$refs.availabilityModal.show($event)">
+                    </find-doctor>
 
-            <find-doctor       v-if="store.currentPage === 'find-doctor'"
-                :initial-dept-id="findDoctorDeptId"
-                @book-doctor="$refs.bookingModal.show($event)"
-                @view-availability="$refs.availabilityModal.show($event)">
-            </find-doctor>
+                    <availability-manager v-if="store.currentPage === 'availability'"></availability-manager>
 
-            <availability-manager v-if="store.currentPage === 'availability'"></availability-manager>
+                    <patient-history   v-if="store.currentPage === 'my-history'"
+                        title="My health journey" :show-export="true"
+                        @view-treatment="$refs.treatmentModal.show($event, true)">
+                    </patient-history>
 
-            <patient-history   v-if="store.currentPage === 'my-history'"
-                title="My Treatment History" :show-export="true">
-            </patient-history>
+                    <patient-history   v-if="store.currentPage === 'patient-history'"
+                        :patient-id="viewHistoryPatientId" title="Patient journey"
+                        @view-treatment="$refs.treatmentModal.show($event, true)">
+                    </patient-history>
 
-            <patient-history   v-if="store.currentPage === 'patient-history'"
-                :patient-id="viewHistoryPatientId" title="Patient History">
-            </patient-history>
-
-            <profile-page      v-if="store.currentPage === 'profile'"></profile-page>
+                    <profile-page      v-if="store.currentPage === 'profile'"></profile-page>
+                </div>
+            </transition>
 
             <!-- Shared Modal Components -->
             <booking-modal     ref="bookingModal"     @booked="store.loadAppointments()"></booking-modal>
             <treatment-modal   ref="treatmentModal"    @saved="store.loadAppointments()"></treatment-modal>
             <reschedule-modal  ref="rescheduleModal"   @rescheduled="store.loadAppointments()"></reschedule-modal>
             <availability-modal ref="availabilityModal"></availability-modal>
+            <ticket-modal      ref="ticketModal"></ticket-modal>
         </div>
     `
 });
 
 //  Register All Components 
-app.component('alert-message',       window.AlertMessage);
+app.component('toast-stack',         window.ToastStack);
+app.component('ecg-line',            window.EcgLine);
+app.component('ecg-loader',          window.EcgLoader);
+app.component('hero-greeting',       window.HeroGreeting);
+app.component('stat-tile',           window.StatTile);
+app.component('slot-picker',         window.SlotPicker);
+app.component('body-map',            window.BodyMap);
+app.component('boarding-pass',       window.BoardingPass);
+app.component('command-palette',     window.CommandPalette);
+app.component('ticket-modal',        window.TicketModal);
 app.component('app-navbar',          window.AppNavbar);
 
 app.component('login-form',          window.LoginForm);

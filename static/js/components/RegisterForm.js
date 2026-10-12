@@ -1,11 +1,10 @@
 window.RegisterForm = {
     emits: ['switch-to-login'],
     template: `
-        <div class="card shadow">
-            <div class="card-header bg-success text-white text-center">
-                <h4 class="mb-0">Patient Registration</h4>
-            </div>
-            <div class="card-body p-4">
+        <div class="card">
+            <div class="card-body p-4 p-md-5">
+                <h3 class="fw-bold mb-1">Create your account</h3>
+                <p class="text-muted mb-4">Register as a patient to book appointments.</p>
                 <div class="alert alert-danger" v-if="error">{{ error }}</div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -57,7 +56,7 @@ window.RegisterForm = {
                     <label class="form-label">Address</label>
                     <textarea class="form-control" v-model="form.address" rows="2"></textarea>
                 </div>
-                <button class="btn btn-success w-100" @click="register" :disabled="loading">
+                <button class="btn btn-primary btn-lg w-100" @click="register" :disabled="loading">
                     <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
                     Register
                 </button>

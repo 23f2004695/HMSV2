@@ -246,7 +246,7 @@ def login():
         return jsonify({'error': 'Your account has been deactivated. Please contact the hospital.'}), 403
 
     token = create_access_token(identity=str(user.id), additional_claims={'role': user.role, 'name': user.name})
-    return jsonify({'token': token, 'user': user.to_dict()})
+    return jsonify({'token': token, 'user': _user_payload(user)})
 
 
 @api_bp.route('/auth/register', methods=['POST'])
@@ -276,7 +276,7 @@ def register():
     cache.delete('admin_stats')
 
     token = create_access_token(identity=str(user.id), additional_claims={'role': user.role, 'name': user.name})
-    return jsonify({'token': token, 'user': user.to_dict()}), 201
+    return jsonify({'token': token, 'user': _user_payload(user)}), 201
 
 
 def _patient_fields(data, partial=False):
