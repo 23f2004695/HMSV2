@@ -119,3 +119,16 @@ def test_reschedule_to_another_day_gets_new_token(api, admin):
     appt = api.book(alice, doctor_id, time='10:00').get_json()
     moved = api.put(f"/appointments/{appt['id']}", as_=alice, json={'date': day_after, 'time': '11:00'}).get_json()
     assert moved['token'] == 'G-02'
+
+
+def test_admin_sets_doctor_room(api, admin):
+    _, doctor_id = api.create_doctor(admin, 'drx', available_on=None)
+    assert api.get(f'/doctors/{doctor_id}', as_=admin).get_json()['room'] == f'Room {100 + doctor_id}'
+    res = api.put(f'/doctors/{doctor_id}', as_=admin, json={'room': 'Room 7'})
+    assert res.get_json()['room'] == 'Room 7'
+
+
+def test_login_returns_role_profile(api, admin):
+    api.create_doctor(admin, 'drx', available_on=None)
+    user = api.post('/auth/login', json={'username': 'drx', 'password': 'secret123'}).get_json()['user']
+    assert user['doctor']['room'].startswith('Room')
