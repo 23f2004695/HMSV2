@@ -1,8 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, date
+from datetime import datetime, timezone
 
 db = SQLAlchemy()
+
+
+def utcnow():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class User(db.Model):
@@ -15,7 +19,7 @@ class User(db.Model):
     name = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(20))
     is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -48,7 +52,7 @@ class Department(db.Model):
             'id': self.id,
             'name': self.name,
             'description': self.description,
-            'doctors_count': len(self.doctors)
+            'doctors_count': sum(1 for d in self.doctors if d.user.is_active)
         }
 
 
@@ -146,12 +150,19 @@ class Appointment(db.Model):
     status = db.Column(db.String(20), default='Booked')  # Booked, Completed, Cancelled
     reason = db.Column(db.Text)
     notes = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
     treatment = db.relationship('Treatment', backref='appointment', uselist=False, lazy=True)
 
-    __table_args__ = (db.UniqueConstraint('doctor_id', 'date', 'time', name='uq_doctor_appointment_slot'),)
+    # Only one active (non-cancelled) appointment per doctor slot, so a cancelled slot can be booked again
+    __table_args__ = (
+        db.Index(
+            'uq_doctor_active_slot', 'doctor_id', 'date', 'time', unique=True,
+            sqlite_where=db.text("status != 'Cancelled'"),
+            postgresql_where=db.text("status != 'Cancelled'"),
+        ),
+    )
 
     def to_dict(self):
         return {
@@ -160,7 +171,8 @@ class Appointment(db.Model):
             'patient_name': self.patient.user.name if self.patient else None,
             'doctor_id': self.doctor_id,
             'doctor_name': self.doctor.user.name if self.doctor else None,
-            'department': self.doctor.specialization if self.doctor else None,
+            'department': self.doctor.department.name if self.doctor and self.doctor.department else None,
+            'specialization': self.doctor.specialization if self.doctor else None,
             'date': self.date.isoformat() if self.date else None,
             'time': self.time,
             'status': self.status,
@@ -179,7 +191,7 @@ class Treatment(db.Model):
     prescription = db.Column(db.Text)
     notes = db.Column(db.Text)
     next_visit = db.Column(db.Date)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     def to_dict(self):
         return {

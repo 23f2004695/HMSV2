@@ -1,29 +1,35 @@
-from flask import Flask, render_template
-from flask_jwt_extended import JWTManager
-from flask_cors import CORS
-from flask_mail import Mail
-from config import Config
-from models import db, User, Department
-from api import cache
+import logging
 import os
 
-jwt = JWTManager()
-mail = Mail()
+from flask import Flask, jsonify, render_template, request
+from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
+
+from config import Config
+from extensions import cache, jwt, mail
+from models import db, User, Department
+
+log = logging.getLogger(__name__)
 
 
-def create_app():
+def create_app(config_class=Config):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(config_class)
 
     db.init_app(app)
     jwt.init_app(app)
     mail.init_app(app)
     CORS(app)
 
+    if not app.config.get('CACHE_TYPE'):
+        app.config['CACHE_TYPE'] = 'RedisCache' if _redis_available(app.config['CACHE_REDIS_URL']) else 'SimpleCache'
     cache.init_app(app)
+    log.info('Using %s for caching', app.config['CACHE_TYPE'])
 
     from api import api_bp
     app.register_blueprint(api_bp, url_prefix='/api')
+
+    _register_error_handlers(app)
 
     @app.route('/')
     def index():
@@ -32,22 +38,59 @@ def create_app():
     with app.app_context():
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
         db.create_all()
-        _seed_admin_and_departments()
+        _seed_admin_and_departments(app)
 
     return app
 
 
-def _seed_admin_and_departments():
-    """Create admin user and default departments programmatically."""
+def _redis_available(url):
+    try:
+        import redis
+        redis.Redis.from_url(url, socket_connect_timeout=0.5).ping()
+        return True
+    except Exception:
+        log.warning('Redis not reachable at %s, falling back to in-memory cache', url)
+        return False
+
+
+def _register_error_handlers(app):
+    # API clients always get JSON back, never an HTML error page
+    @app.errorhandler(HTTPException)
+    def http_error(e):
+        if request.path.startswith('/api/'):
+            return jsonify({'error': e.description}), e.code
+        return e
+
+    @app.errorhandler(Exception)
+    def unhandled_error(e):
+        db.session.rollback()
+        log.exception('Unhandled error on %s', request.path)
+        return jsonify({'error': 'Something went wrong on our side. Please try again.'}), 500
+
+    @jwt.unauthorized_loader
+    def missing_token(reason):
+        return jsonify({'error': 'Please log in to continue'}), 401
+
+    @jwt.invalid_token_loader
+    def invalid_token(reason):
+        return jsonify({'error': 'Your session is invalid. Please log in again.'}), 401
+
+    @jwt.expired_token_loader
+    def expired_token(header, payload):
+        return jsonify({'error': 'Your session has expired. Please log in again.'}), 401
+
+
+def _seed_admin_and_departments(app):
+    """Create the admin user and default departments on first run."""
     if not User.query.filter_by(role='admin').first():
         admin = User(
-            username='admin',
-            email='admin@hospital.com',
+            username=app.config['ADMIN_USERNAME'],
+            email=app.config['ADMIN_EMAIL'],
             role='admin',
             name='Hospital Admin',
             phone='9999999999'
         )
-        admin.set_password('admin123')
+        admin.set_password(app.config['ADMIN_PASSWORD'])
         db.session.add(admin)
 
     default_departments = [
@@ -67,7 +110,6 @@ def _seed_admin_and_departments():
     db.session.commit()
 
 
-app = create_app()
-
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    logging.basicConfig(level=logging.INFO)
+    create_app().run(debug=os.environ.get('FLASK_DEBUG') == '1', port=int(os.environ.get('PORT', 5000)))
