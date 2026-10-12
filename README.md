@@ -58,25 +58,67 @@ The admin account is created automatically on first run. You can change its pass
 | ![Slot picker](docs/screenshots/slot-picker.png) | ![Just taken](docs/screenshots/just-taken.png) |
 | **Doctor's queue** | **End of the day** |
 | ![Doctor dashboard](docs/screenshots/doctor-dashboard.png) | ![Doctor done](docs/screenshots/doctor-done.png) |
-| **Writing a prescription** | **Paint your week** |
-| ![Prescription](docs/screenshots/rx-signing.png) | ![Paint week](docs/screenshots/paint-week.png) |
-| **Health journey** | **Command palette** |
-| ![Journey](docs/screenshots/journey.png) | ![Palette](docs/screenshots/palette.png) |
+| **Signing a prescription** | **Booking confirmed** |
+| ![Prescription](docs/screenshots/rx-signing.png) | ![Booked](docs/screenshots/booked.png) |
+| **Health journey** | **My week** |
+| ![Journey](docs/screenshots/journey.png) | ![My week](docs/screenshots/paint-week.png) |
 | **Lobby screen** | **Admin dashboard** |
 | ![Lobby](docs/screenshots/lobby.png) | ![Admin dashboard](docs/screenshots/admin-dashboard.png) |
-| **Departments, each with a mascot** | **Lobby callout** |
-| ![Departments](docs/screenshots/departments.png) | ![Lobby callout](docs/screenshots/lobby-callout.png) |
+| **Departments, each with a mascot** | **Ctrl+K command palette** |
+| ![Departments](docs/screenshots/departments.png) | ![Palette](docs/screenshots/palette.png) |
+
+### More screenshots
 
 <details>
-<summary>More: login, ticket back, booking confirmation, prescription view, mobile</summary>
+<summary><b>Patient</b>: sign up, browse doctors, appointments, ticket, journey list, profile</summary>
+
+| Sign up | Browse doctors |
+|---|---|
+| ![Register](docs/screenshots/register.png) | ![Browse doctors](docs/screenshots/browse-doctors.png) |
+| **Appointments** | **Boarding pass** |
+| ![Appointments](docs/screenshots/patient-appointments.png) | ![Ticket](docs/screenshots/ticket-modal.png) |
+| **Booking confirmed** | **Back of the pass (prep notes)** |
+| ![Booked](docs/screenshots/booked.png) | ![Ticket back](docs/screenshots/ticket-back.png) |
+| **Journey as a list** | **Profile** |
+| ![Journey list](docs/screenshots/journey-list.png) | ![Profile](docs/screenshots/profile.png) |
+| **Opening a prescription** | **Login** |
+| ![Prescription view](docs/screenshots/rx-view.png) | ![Login](docs/screenshots/login.png) |
+
+</details>
+
+<details>
+<summary><b>Doctor</b>: writing a prescription, appointments, My week</summary>
+
+| Writing a prescription | Appointments |
+|---|---|
+| ![Prescription](docs/screenshots/rx-write.png) | ![Doctor appointments](docs/screenshots/doctor-appointments.png) |
+| **My week: empty, with the drag hint** | **My week: painting a shift** |
+| ![Week empty](docs/screenshots/week-empty.png) | ![Week dragging](docs/screenshots/week-dragging.png) |
+
+</details>
+
+<details>
+<summary><b>Admin</b>: doctors, adding a doctor, patients, appointments, search</summary>
+
+| Doctors | Adding a doctor |
+|---|---|
+| ![Admin doctors](docs/screenshots/admin-doctors.png) | ![Add doctor](docs/screenshots/admin-add-doctor.png) |
+| **Patients** | **All appointments** |
+| ![Admin patients](docs/screenshots/admin-patients.png) | ![Admin appointments](docs/screenshots/admin-appointments.png) |
+| **Search** | **Lobby callout** |
+| ![Admin search](docs/screenshots/admin-search.png) | ![Lobby callout](docs/screenshots/lobby-callout.png) |
+
+</details>
+
+<details>
+<summary><b>Mobile</b></summary>
 
 <p>
-  <img src="docs/screenshots/login.png" alt="Login" width="640">
-  <img src="docs/screenshots/booked.png" alt="Booked" width="640">
-  <img src="docs/screenshots/rx-view.png" alt="Prescription view" width="640">
-  <img src="docs/screenshots/ticket-back.png" alt="Ticket back" width="480">
-  <img src="docs/screenshots/mobile-dashboard.png" alt="Mobile dashboard" width="240">
-  <img src="docs/screenshots/mobile-bodymap.png" alt="Mobile body map" width="240">
+  <img src="docs/screenshots/mobile-login.png" alt="Mobile login" width="200">
+  <img src="docs/screenshots/mobile-dashboard.png" alt="Mobile patient dashboard" width="200">
+  <img src="docs/screenshots/mobile-bodymap.png" alt="Mobile body map" width="200">
+  <img src="docs/screenshots/mobile-doctor.png" alt="Mobile doctor dashboard" width="200">
+  <img src="docs/screenshots/week-mobile.png" alt="Mobile My week" width="200">
 </p>
 </details>
 
