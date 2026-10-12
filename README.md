@@ -19,15 +19,15 @@ It has three roles. **Patients** book and track visits, **doctors** paint their 
 
 | | |
 |---|---|
-| 🧍 **"Where does it hurt?"** | Patients tap a region on a body map and pick a symptom, and the app suggests the right department (knee → Orthopedics, chest pain → Cardiology, anything for a child → Pediatrics) and shows who's free. |
+| 🧑‍⚕️ **A cast of 3D characters** | Every department has its own mascot. Each role gets a scene in its greeting, and empty pages, loaders and confirmations all have a character. They tilt toward your cursor, float, and pop up a speech bubble with a tip when you click or hover them. |
+| 🧍 **"Where does it hurt?"** | Patients tap a glowing point on a 3D character and pick a symptom, and the app suggests the right department (knee → Orthopedics, chest pain → Cardiology, anything for a child → Pediatrics). That department's mascot pops up, with the doctors who are free. |
 | 🎫 **Boarding-pass tickets** | Every booking gets a token like `C-04`, a QR code and a gate (room). Tap the pass to flip it for prep notes. On the day it shows *"Now serving C-02 · 1 ahead of you · ~15 min"* and lights up when it's your turn. |
-| 📺 **Lobby "Now Serving" screen** | A full-screen board for the waiting-room TV at `/lobby`. When a doctor calls the next patient, the token appears full-screen and then flips into place split-flap style, with an optional chime and spoken announcement. No patient names are shown. |
-| 💓 **Heartbeat branding** | An ECG line runs under the navbar and spikes when something happens (a booking, a patient called). Loaders draw an ECG trace and the logo beats. |
+| 📺 **Lobby "Now Serving" screen** | A full-screen board for the waiting-room TV at `/lobby`. When a doctor calls the next patient, a waving nurse announces the token, and then the board flips it into place split-flap style. There's an optional chime and spoken announcement, and no patient names are shown. |
 | 🗓️ **Paint your week** | Doctors drag across a weekly calendar grid to set their hours, with presets for weekdays and mornings. Patients see each doctor's week as a heatmap of free slots, and a slot booked by someone else while you're looking fades out as *just taken*. |
 | ℞ **Prescription pad** | Treatments are written on a letterhead pad. Signing draws the doctor's signature in handwriting, and patients can open any prescription and save it as a PDF. |
 | 🚇 **Health journey map** | A patient's history is a subway-style line with one station per visit, coloured by department. Tap a station to see the diagnosis and prescription. |
 | ⌨️ **Command palette + voice** | Press <kbd>Ctrl</kbd>+<kbd>K</kbd> and type (or say) things like *"book cardiology tomorrow at 2pm"*, *"cancel my next"*, *"call next"*, *"add slot friday 9-1"* or *"patient meera"*. |
-| ✨ **Small touches** | A time-of-day greeting (*"Good morning, Dr. Mehta, 6 patients today, first at 9:30"*), an auto/light/dark theme that follows the clock, count-up stats, toast notifications, page transitions, and confetti when a doctor finishes their last patient. All motion switches off for people who prefer reduced motion. |
+| ✨ **Small touches** | A time-of-day greeting (*"Good afternoon, Dr. Mehta. 4 patients today, first at 09:30"*), count-up stats, toast notifications, springy page transitions, a logo heart that beats when something happens, and confetti when a doctor finishes their last patient. All motion switches off for people who prefer reduced motion. |
 
 <p align="center">
   <img src="docs/demo/lobby-screen.gif" alt="Doctor calls the next patient and the lobby board flips" width="880">
@@ -46,8 +46,10 @@ It has three roles. **Patients** book and track visits, **doctors** paint their 
 | ![Prescription](docs/screenshots/rx-signing.png) | ![Paint week](docs/screenshots/paint-week.png) |
 | **Health journey** | **Command palette** |
 | ![Journey](docs/screenshots/journey.png) | ![Palette](docs/screenshots/palette.png) |
-| **Lobby screen** | **Admin, dark mode** |
-| ![Lobby](docs/screenshots/lobby.png) | ![Admin dark](docs/screenshots/admin-dark.png) |
+| **Lobby screen** | **Admin dashboard** |
+| ![Lobby](docs/screenshots/lobby.png) | ![Admin dashboard](docs/screenshots/admin-dashboard.png) |
+| **Departments, each with a mascot** | **Lobby callout** |
+| ![Departments](docs/screenshots/departments.png) | ![Lobby callout](docs/screenshots/lobby-callout.png) |
 
 <details>
 <summary>More: login, ticket back, booking confirmation, prescription view, mobile</summary>
@@ -86,7 +88,7 @@ It has three roles. **Patients** book and track visits, **doctors** paint their 
 
 | Layer | Tools |
 |---|---|
-| Frontend | Vue 3 (CDN, no build step), Bootstrap 5, Bootstrap Icons, qrcodejs, canvas-confetti, Web Speech API |
+| Frontend | Vue 3 (CDN, no build step), Bootstrap 5, Bootstrap Icons, Nunito, 3D illustrations (WebP), qrcodejs, canvas-confetti, Web Speech API |
 | Backend | Flask 3, Flask-SQLAlchemy, Flask-JWT-Extended, Flask-Caching, Flask-Mail |
 | Database | SQLite by default (any SQLAlchemy URL works through `DATABASE_URL`) |
 | Cache | Redis, with an automatic in-memory fallback when Redis isn't running |
@@ -218,11 +220,12 @@ HMSV2/
 │   ├── index.html      # the SPA shell
 │   └── lobby.html      # the waiting-room screen
 ├── static/
-│   ├── css/style.css   # design tokens, dark mode, animations
-│   └── js/
-│       ├── store.js    # shared state, API helper, toasts, theme
-│       ├── app.js      # root component and routing
-│       └── components/ # body map, boarding pass, slot picker, palette, Rx pad, journey...
+│   ├── css/style.css   # colours, character interactions, animations
+│   ├── js/
+│   │   ├── store.js    # shared state, API helper, toasts
+│   │   ├── app.js      # root component and routing
+│   │   └── components/ # characters, body map, boarding pass, slot picker, palette, Rx pad...
+│   └── img/illos/      # the 3D character illustrations
 ├── tests/              # pytest suite
 └── docs/
     ├── project-report.pdf
