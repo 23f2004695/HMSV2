@@ -449,7 +449,7 @@ def get_doctor(doctor_id):
 
 def _doctor_fields(data, partial=False):
     fields = {}
-    for key, max_len in (('specialization', 100), ('qualification', 200), ('bio', 2000)):
+    for key, max_len in (('specialization', 100), ('qualification', 200), ('bio', 2000), ('room', 20)):
         if not partial or key in data:
             fields[key] = text(data, key, max_len)
     if not partial or 'department_id' in data:
@@ -730,6 +730,8 @@ def create_appointment():
         reason=text(data, 'reason', 1000)
     )
     db.session.add(appointment)
+    from api_live import assign_token
+    assign_token(appointment)
     commit()
 
     invalidate_patient(patient.id)
@@ -755,8 +757,12 @@ def update_appointment(appt_id):
         new_date = parse_date(data.get('date'))
         new_time = parse_time(data.get('time'))
         check_bookable(appointment.doctor, appointment.patient_id, new_date, new_time, exclude_id=appointment.id)
-        appointment.date = new_date
+        if new_date != appointment.date:
+            from api_live import assign_token
+            appointment.date = new_date
+            assign_token(appointment)
         appointment.time = new_time
+        appointment.called_at = None
 
     new_status = data.get('status')
     if new_status and new_status != appointment.status:

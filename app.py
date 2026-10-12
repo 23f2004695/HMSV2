@@ -27,6 +27,7 @@ def create_app(config_class=Config):
     log.info('Using %s for caching', app.config['CACHE_TYPE'])
 
     from api import api_bp
+    import api_live  # noqa: F401  (adds the queue, lobby and slot routes to api_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
 
     _register_error_handlers(app)
@@ -38,6 +39,7 @@ def create_app(config_class=Config):
     with app.app_context():
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
         db.create_all()
+        _upgrade_schema()
         _seed_admin_and_departments(app)
 
     return app
@@ -78,6 +80,35 @@ def _register_error_handlers(app):
     @jwt.expired_token_loader
     def expired_token(header, payload):
         return jsonify({'error': 'Your session has expired. Please log in again.'}), 401
+
+
+# Columns added after the first release. create_all() doesn't touch existing tables,
+# so older databases get them added here.
+NEW_COLUMNS = {
+    'doctors': {'room': 'VARCHAR(20)'},
+    'appointments': {'token': 'VARCHAR(10)', 'called_at': 'DATETIME'},
+}
+
+
+def _upgrade_schema():
+    from sqlalchemy import inspect, text
+    inspector = inspect(db.engine)
+    with db.engine.begin() as conn:
+        for table, columns in NEW_COLUMNS.items():
+            existing = {c['name'] for c in inspector.get_columns(table)}
+            for name, sql_type in columns.items():
+                if name not in existing:
+                    conn.execute(text(f'ALTER TABLE {table} ADD COLUMN {name} {sql_type}'))
+
+    from models import Appointment
+    from api_live import assign_token
+    missing = Appointment.query.filter(Appointment.token.is_(None))\
+        .order_by(Appointment.date, Appointment.created_at, Appointment.id).all()
+    for appointment in missing:
+        assign_token(appointment)
+        db.session.flush()
+    if missing:
+        db.session.commit()
 
 
 def _seed_admin_and_departments(app):

@@ -66,6 +66,7 @@ class Doctor(db.Model):
     experience_years = db.Column(db.Integer, default=0)
     consultation_fee = db.Column(db.Float, default=0.0)
     bio = db.Column(db.Text)
+    room = db.Column(db.String(20))
 
     user = db.relationship('User', backref=db.backref('doctor_profile', uselist=False))
     appointments = db.relationship('Appointment', backref='doctor', lazy=True)
@@ -85,8 +86,19 @@ class Doctor(db.Model):
             'experience_years': self.experience_years,
             'consultation_fee': self.consultation_fee,
             'bio': self.bio,
+            'room': self.room_label,
+            'initials': self.initials,
             'is_active': self.user.is_active
         }
+
+    @property
+    def room_label(self):
+        return self.room or f'Room {100 + self.id}'
+
+    @property
+    def initials(self):
+        parts = self.user.name.split()
+        return ''.join(p[0] for p in parts[:2]).upper()
 
 
 class Patient(db.Model):
@@ -150,6 +162,8 @@ class Appointment(db.Model):
     status = db.Column(db.String(20), default='Booked')  # Booked, Completed, Cancelled
     reason = db.Column(db.Text)
     notes = db.Column(db.Text)
+    token = db.Column(db.String(10))      # queue number shown on the ticket and lobby screen, e.g. C-04
+    called_at = db.Column(db.DateTime)    # when the doctor called this patient in
     created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
@@ -178,6 +192,9 @@ class Appointment(db.Model):
             'status': self.status,
             'reason': self.reason,
             'notes': self.notes,
+            'token': self.token,
+            'room': self.doctor.room_label if self.doctor else None,
+            'called_at': self.called_at.isoformat() if self.called_at else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'treatment': self.treatment.to_dict() if self.treatment else None
         }
