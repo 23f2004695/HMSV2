@@ -945,3 +945,10 @@ code { color: var(--hms-red); font-weight: 700; }
     }
 }
 .tool-brush .paint-cell.on:not(.past):hover { background: #86d6a1; }
+
+/* page headers on the list pages */
+.page-head { display: flex; align-items: center; gap: 1rem; }
+.page-head .illo img { height: 84px; width: auto; }
+.dept-pill { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--hms-soft); border: 1px solid var(--hms-border); border-radius: 999px; padding: 0.15rem 0.65rem 0.15rem 0.2rem; font-weight: 700; font-size: 0.85rem; }
+.dept-pill img { height: 26px; width: 26px; object-fit: contain; border-radius: 50%; background: #fff; }
+.blood-pill { display: inline-block; background: var(--hms-red-soft); color: #c22d38; border-radius: 999px; padding: 0.1rem 0.55rem; font-weight: 800; font-size: 0.8rem; }

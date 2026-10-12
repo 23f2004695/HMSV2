@@ -2,12 +2,18 @@ window.AppointmentsList = {
     emits: ['open-treatment', 'view-treatment', 'reschedule', 'view-ticket'],
     template: `
         <div>
-            <h3 class="mb-3 fw-bold">Appointments</h3>
+            <div class="page-head mb-3">
+                <illo name="records-scene" :tips="['Filter by status with the buttons below.']" pop></illo>
+                <div class="flex-grow-1">
+                    <h3 class="fw-bold mb-0">Appointments</h3>
+                    <div class="text-muted">{{ store.appointments.length }} shown &middot; tap the ticket icon to see a boarding pass</div>
+                </div>
+            </div>
             <div class="btn-group mb-3 flex-wrap">
                 <button class="btn" :class="filter === '' ? 'btn-primary' : 'btn-outline-primary'" @click="setFilter('')">All</button>
-                <button class="btn" :class="filter === 'Booked' ? 'btn-warning' : 'btn-outline-warning'" @click="setFilter('Booked')">Booked</button>
-                <button class="btn" :class="filter === 'Completed' ? 'btn-success' : 'btn-outline-success'" @click="setFilter('Completed')">Completed</button>
-                <button class="btn" :class="filter === 'Cancelled' ? 'btn-danger' : 'btn-outline-danger'" @click="setFilter('Cancelled')">Cancelled</button>
+                <button class="btn" :class="filter === 'Booked' ? 'btn-primary' : 'btn-outline-primary'" @click="setFilter('Booked')">Booked</button>
+                <button class="btn" :class="filter === 'Completed' ? 'btn-primary' : 'btn-outline-primary'" @click="setFilter('Completed')">Completed</button>
+                <button class="btn" :class="filter === 'Cancelled' ? 'btn-primary' : 'btn-outline-primary'" @click="setFilter('Cancelled')">Cancelled</button>
             </div>
             <div class="card">
                 <div class="card-body p-0">
@@ -30,16 +36,16 @@ window.AppointmentsList = {
                                     <button class="btn btn-sm btn-outline-primary me-1" v-if="a.status==='Booked'" @click="$emit('view-ticket', a)" title="Ticket">
                                         <i class="bi bi-ticket-perforated"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-success me-1" v-if="a.status==='Booked' && canComplete" @click="$emit('open-treatment', a)" title="Complete">
+                                    <button class="btn btn-sm btn-outline-success me-1" v-if="a.status==='Booked' && canComplete" @click="$emit('open-treatment', a)" title="Complete">
                                         <i class="bi bi-check-circle"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-warning me-1" v-if="a.status==='Booked' && store.user.role==='patient'" @click="$emit('reschedule', a)" title="Reschedule">
+                                    <button class="btn btn-sm btn-outline-secondary me-1" v-if="a.status==='Booked' && store.user.role==='patient'" @click="$emit('reschedule', a)" title="Reschedule">
                                         <i class="bi bi-arrow-repeat"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-danger me-1" v-if="a.status==='Booked'" @click="cancel(a.id)" title="Cancel">
+                                    <button class="btn btn-sm btn-outline-danger me-1" v-if="a.status==='Booked'" @click="cancel(a.id)" title="Cancel">
                                         <i class="bi bi-x-circle"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-info" v-if="a.treatment" @click="$emit('view-treatment', a)" title="View Treatment">
+                                    <button class="btn btn-sm btn-outline-primary" v-if="a.treatment" @click="$emit('view-treatment', a)" title="View Treatment">
                                         <i class="bi bi-file-medical"></i>
                                     </button>
                                 </td>

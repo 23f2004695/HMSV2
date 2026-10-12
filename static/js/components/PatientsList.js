@@ -2,28 +2,42 @@ window.PatientsList = {
     emits: ['view-history'],
     template: `
         <div>
-            <h3 class="mb-3">Manage Patients</h3>
-            <div class="input-group mb-3" style="max-width:400px;">
+            <div class="page-head mb-3">
+                <illo name="nurse-clipboard" :tips="['Search by name, phone or email.']" pop></illo>
+                <div class="flex-grow-1">
+                    <h3 class="fw-bold mb-0">Patients</h3>
+                    <div class="text-muted">{{ patients.length }} registered &middot; open anyone's journey or deactivate an account</div>
+                </div>
+            </div>
+            <div class="input-group mb-3" style="max-width:420px;">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
                 <input type="text" class="form-control" placeholder="Search patients..." v-model="searchText" @keyup.enter="search">
                 <button class="btn btn-primary" @click="search">Search</button>
             </div>
-            <div class="card shadow-sm">
+            <div class="card">
                 <div class="card-body p-0">
                     <div class="table-responsive">
                     <table class="table table-hover mb-0 align-middle">
                         <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Gender</th><th>Blood Group</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody>
                             <tr v-for="p in patients" :key="p.id" :class="{'table-secondary': !p.is_active}">
-                                <td>{{ p.id }}</td><td>{{ p.name }}</td><td>{{ p.email }}</td><td>{{ p.phone }}</td>
-                                <td>{{ p.gender }}</td><td>{{ p.blood_group }}</td>
+                                <td class="text-muted">#{{ p.id }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="avatar" style="width:36px;height:36px;font-size:0.78rem" :style="{ background: store.avatarColor(p.name) }">{{ store.initials(p.name) }}</span>
+                                        <span class="fw-semibold">{{ p.name }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ p.email }}</td><td>{{ p.phone }}</td>
+                                <td>{{ p.gender || '-' }}</td><td><span v-if="p.blood_group" class="blood-pill">{{ p.blood_group }}</span><span v-else>-</span></td>
                                 <td>
                                     <span class="badge bg-success" v-if="p.is_active">Active</span>
                                     <span class="badge bg-secondary" v-else>Inactive</span>
                                 </td>
-                                <td>
-                                    <button class="btn btn-sm btn-info me-1" @click="$emit('view-history', p.id)" title="View History"><i class="bi bi-clock-history"></i></button>
-                                    <button class="btn btn-sm btn-danger me-1" @click="deactivate(p.id)" v-if="p.is_active" title="Deactivate"><i class="bi bi-person-x"></i></button>
-                                    <button class="btn btn-sm btn-success" @click="activate(p.id)" v-else title="Activate"><i class="bi bi-person-check"></i></button>
+                                <td class="text-nowrap">
+                                    <button class="btn btn-sm btn-outline-primary me-1" @click="$emit('view-history', p.id)" title="View journey"><i class="bi bi-signpost-split"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger me-1" @click="deactivate(p.id)" v-if="p.is_active" title="Deactivate"><i class="bi bi-person-x"></i></button>
+                                    <button class="btn btn-sm btn-outline-success" @click="activate(p.id)" v-else title="Activate"><i class="bi bi-person-check"></i></button>
                                 </td>
                             </tr>
                         </tbody>
