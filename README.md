@@ -1,4 +1,4 @@
-# 🏥 Hospital Management System V2
+# 🏥 QueueCare: Real-Time Hospital Intake & Ticketing System
 
 [![tests](https://github.com/23f2004695/HMSV2/actions/workflows/tests.yml/badge.svg)](https://github.com/23f2004695/HMSV2/actions/workflows/tests.yml)
 ![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?logo=python&logoColor=white)
